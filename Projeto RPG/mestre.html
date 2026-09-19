@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Painel do Mestre - RPG Manager</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="painel-mestre">
+
+        <h2>⚔️ Painel do Mestre</h2>
+
+        <h3>Inimigos</h3>
+
+        <button id="botao-criar-inimigo">+ Criar inimigo</button>
+
+<div id="formulario-inimigo" style="display: none;">
+
+    <input type="text" id="nome-inimigo" placeholder="Nome">
+
+    <input type="number" id="hp-inimigo" placeholder="HP" min="1">
+
+    <label for="imagem-inimigo">Imagem:</label>
+
+        <input type="file" id="imagem-inimigo" accept=".png,image/png">
+
+    <label for="tamanho-inimigo">Tamanho:</label>
+
+<select id="tamanho-inimigo">
+    <option value="pequeno">Pequeno</option>
+    <option value="medio">Médio</option>
+    <option value="grande">Grande</option>
+    <option value="muito-grande">Muito grande</option>
+    <option value="enorme">Enorme</option>
+</select>
+
+    <button id="confirmar-inimigo">
+        Criar
+    </button>
+
+</div>
+
+        <div id="lista-inimigos-mestre"></div>
+
+    </div>
+
+
+    <script>
+
+        const listaInimigosMestre =
+            document.getElementById("lista-inimigos-mestre");
+
+
+        function atualizarInimigos() {
+
+            listaInimigosMestre.innerHTML = "";
+
+            const personagensSalvos = JSON.parse(
+                localStorage.getItem("personagens")
+            ) || {};
+
+
+            for (const id in personagensSalvos) {
+
+                const personagem = personagensSalvos[id];
+
+
+                if (personagem.tipo !== "inimigo") {
+                    continue;
+                }
+
+
+                const divInimigo = document.createElement("div");
+
+                divInimigo.classList.add("inimigo-mestre");
+
+
+                divInimigo.innerHTML = `
+                    <h4>${personagem.nome}</h4>
+
+                    <p>
+                        HP:
+                        <span class="hp-inimigo">
+                            ${personagem.hp}
+                        </span>
+                        /
+                        ${personagem.hpMaximo}
+                    </p>
+
+                    <p>
+                        Tamanho: ${personagem.tamanho}
+                    </p>
+
+                    <input
+                        type="number"
+                        class="valor-dano"
+                        placeholder="Valor"
+                        min="1"
+                    >
+
+                    <button class="botao-adicionar-mapa">
+                        Adicionar ao mapa
+                    </button>
+
+                    <button class="botao-dano-inimigo">
+                        Dano
+                    </button>
+
+                    <button class="botao-cura-inimigo">
+                        Cura
+                    </button>
+
+                    <button class="botao-excluir-inimigo">
+                        Excluir
+                    </button>
+                `;
+                
+
+
+                const inputDano =
+                    divInimigo.querySelector(".valor-dano");
+
+                const botaoDano =
+                    divInimigo.querySelector(".botao-dano-inimigo");
+
+                const botaoCura =
+                    divInimigo.querySelector(".botao-cura-inimigo");
+
+                const botaoExcluir =
+                    divInimigo.querySelector(".botao-excluir-inimigo");
+
+                const botaoAdicionarMapa =
+                    divInimigo.querySelector(".botao-adicionar-mapa");
+
+                    botaoAdicionarMapa.addEventListener("click", function() {
+                        console.log("ADICIONANDO AO MAPA:", personagem);
+
+    localStorage.setItem(
+    "inimigoParaMapa",
+    JSON.stringify({
+        id: id,
+        nome: personagem.nome,
+        hp: personagem.hp,
+        hpMaximo: personagem.hpMaximo,
+        tipo: "inimigo",
+        tamanho: personagem.tamanho,
+        imagem: personagem.imagem
+    })
+);
+
+    botaoAdicionarMapa.textContent = "Já está no mapa";
+    botaoAdicionarMapa.disabled = true;
+
+});
+
+
+                botaoDano.addEventListener("click", function() {
+
+                    const valor = Number(inputDano.value);
+
+                    personagem.hp -= valor;
+
+
+                    if (personagem.hp < 0) {
+                        personagem.hp = 0;
+                    }
+
+
+                    personagensSalvos[id] = personagem;
+
+
+                    localStorage.setItem(
+                        "personagens",
+                        JSON.stringify(personagensSalvos)
+                    );
+
+
+                    atualizarInimigos();
+
+                    inputDano.value = "";
+
+                });
+
+
+                botaoCura.addEventListener("click", function() {
+
+                    const valor = Number(inputDano.value);
+
+                    personagem.hp += valor;
+
+
+                    if (personagem.hp > personagem.hpMaximo) {
+                        personagem.hp = personagem.hpMaximo;
+                    }
+
+
+                    personagensSalvos[id] = personagem;
+
+
+                    localStorage.setItem(
+                        "personagens",
+                        JSON.stringify(personagensSalvos)
+                    );
+
+
+                    atualizarInimigos();
+
+                    inputDano.value = "";
+
+                });
+
+                botaoExcluir.addEventListener("click", function() {
+
+                delete personagensSalvos[id];
+
+                localStorage.setItem(
+                "personagens",
+                JSON.stringify(personagensSalvos)
+            );
+
+                atualizarInimigos();
+
+});
+
+
+                listaInimigosMestre.appendChild(divInimigo);
+
+            }
+
+        }
+
+         const botaoCriarInimigo =
+        document.getElementById("botao-criar-inimigo");
+
+
+    const formularioInimigo =
+        document.getElementById("formulario-inimigo");
+
+
+    botaoCriarInimigo.addEventListener("click", function() {
+
+        formularioInimigo.style.display = "block";
+
+    });
+
+    const confirmarInimigo =
+    document.getElementById("confirmar-inimigo");
+
+const nomeInimigo =
+    document.getElementById("nome-inimigo");
+
+const hpInimigo =
+    document.getElementById("hp-inimigo");
+
+const tamanhoInimigo =
+    document.getElementById("tamanho-inimigo");
+
+const imagemInimigo =
+    document.getElementById("imagem-inimigo");
+
+
+confirmarInimigo.addEventListener("click", function() {
+
+    const nome = nomeInimigo.value;
+    const hp = Number(hpInimigo.value);
+    const tamanho = tamanhoInimigo.value;
+    const arquivo = imagemInimigo.files[0];
+
+    if (nome === "" || hp <= 0) {
+        return;
+    }
+
+    const id = nome.toLowerCase().replaceAll(" ", "-");
+
+    function salvarInimigo(imagem) {
+
+        const personagensSalvos = JSON.parse(
+            localStorage.getItem("personagens")
+        ) || {};
+
+        personagensSalvos[id] = {
+            nome: nome,
+            hp: hp,
+            hpMaximo: hp,
+            sanidade: 0,
+            sanidadeMaxima: 0,
+            tipo: "inimigo",
+            tamanho: tamanho,
+            imagem: imagem
+        };
+
+        localStorage.setItem(
+            "personagens",
+            JSON.stringify(personagensSalvos)
+        );
+
+        nomeInimigo.value = "";
+        hpInimigo.value = "";
+        imagemInimigo.value = "";
+
+        formularioInimigo.style.display = "none";
+
+        atualizarInimigos();
+    }
+
+    if (arquivo) {
+
+        const leitor = new FileReader();
+
+        leitor.onload = function() {
+            salvarInimigo(leitor.result);
+        };
+
+        leitor.readAsDataURL(arquivo);
+
+    } else {
+
+        salvarInimigo(null);
+
+    }
+
+});
+        atualizarInimigos();
+
+
+        window.addEventListener("storage", function(event) {
+
+            if (event.key === "personagens") {
+                atualizarInimigos();
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

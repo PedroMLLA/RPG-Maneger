@@ -1,0 +1,451 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #181818;
+    color: white;
+
+}
+header {
+    height: 60px;
+    width: 100%;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    background: #101010;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    z-index: 20;
+    gap: 10px;
+}
+
+#botoes-header {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+header h1 {
+    font-size: 22px;
+    margin-left: 15px;
+
+}
+
+aside {
+    width: 220px;
+    background: #111;
+    padding: 20px;
+}
+
+aside h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+aside button {
+    display: block;
+    width: 100%;
+
+    padding: 10px;
+    margin-bottom: 8px;
+
+    background: #222;
+    color: white;
+
+    border: 1px solid #444;
+    border-radius: 5px;
+
+    cursor: pointer;
+}
+
+section {
+    flex: 1;
+    padding: 20px;
+}
+
+section h2{
+    margin-bottom: 10px;
+}
+
+main{
+    height: calc(100vh - 60px);
+}
+
+#mapa {
+    position: relative;
+    
+    width: 100%;
+    height: calc(100% - 35px);
+
+    background: #292929;
+
+    border: 2px solid #444;
+    border-radius: 8px;
+}
+
+#mapa img {
+   display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#botao-menu {
+    background: none;
+    border: none;
+    color: white;
+
+    font-size: 25px;
+    cursor: pointer;
+}
+
+#barra-lateral {
+    position: fixed;
+
+    top: 60px;
+    left: 0;
+
+    width: 250px;
+    height: calc(100vh - 60px);
+
+    background: #111;
+    padding: 20px;
+    border-right: 1px solid #333;
+    transition: transform 0.3s ease;
+    z-index: 10;
+}
+
+#barra-lateral.fechada {
+    transform: translateX(-100%);
+}
+
+.inicio {
+    padding: 100px 40px 40px;
+}
+
+.inicio h2{
+    margin-bottom: 30px;
+}
+
+.lista-mapas {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.mapa-card {
+    width: 250px;
+    min-height: 150px;
+    padding: 20px;
+
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 10px;
+
+    color: white;
+    text-decoration: none;
+
+    transition: 0.2s;
+}
+
+.mapa-card:hover {
+    transform: translateY(-5px);
+    border-color: #777;
+}
+
+.mapa-card h3 {
+    margin-bottom: 10px;
+}
+
+.mapa-card p {
+    color: #aaa;
+}
+
+.botao-voltar {
+    display: inline-block;
+
+    margin-left: 20px;
+    margin-right: 20px;
+
+    padding: 8px 12px;
+
+    background: #222;
+    color: white;
+
+    border: 1px solid #444;
+    border-radius: 6px;
+
+    text-decoration: none;
+
+    font-size: 14px;
+}
+
+.botao-voltar:hover {
+    background: #333;
+}
+
+.lista-campanhas {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.campanha-card {
+    width: 280px;
+    min-height: 160px;
+
+    padding: 25px;
+
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 10px;
+    
+    color: white;
+    text-decoration: none;
+
+    transition: 0.2s;
+}
+
+.campanha-card:hover {
+    transform: translateY(-5px);
+    border-color: #777;
+}
+
+.campanha-card h3 {
+margin-bottom: 10px;
+}
+
+.campanha-card p {
+    color: #aaa;
+}
+
+#area-batalha {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+}
+
+#area-mapa {
+    width: 100%;
+    height: 100%;
+}
+
+#mapa {
+    width: 100%;
+    height: 100%;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+#mapa img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+}
+
+#personagens-mapa {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.boneco {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgb(7, 7, 7);
+    border: 3px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: grab;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.boneco.imagem-personagem {
+    border-radius: 0;
+    background-color: transparent;
+    border: none;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 80px;
+    height: 80px;
+}
+
+.boneco:active {
+    cursor: grabbing;
+}
+
+#conteudo-mapa {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+}
+
+#painel-personagem {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+
+    width: 220px;
+    padding: 20px;
+
+    background: #222;
+    border: 1px solid #555;
+    border-radius: 10px;
+
+    color: white;
+
+    display: none;
+}
+
+#formulario-personagem {
+    display: none;
+}
+
+#painel-mestre {
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    width: 300px;
+    padding: 20px;
+    background: #222;
+    border: 1px solid #555;
+    border-radius: 10px;
+    color: white;
+    display: block;
+}
+
+.inimigo-mestre {
+    margin-top: 20px;
+    padding: 15px;
+    background: #333;
+    border-radius: 8px;
+}
+
+.inimigo-mestre h4 {
+    margin-top: 0;
+}
+
+.inimigo-mestre input {
+    width: 80px;
+    padding: 8px;
+}
+#regua {
+    position: absolute;
+    height: 3px;
+    background: red;
+    transform-origin: left center;
+    display: none;
+    pointer-events: none;
+    z-index: 100;
+}
+
+#distancia-regua {
+    position: absolute;
+    display: none;
+    background: #222;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 101;
+    white-space: nowrap;
+}
+
+#grade-mapa {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    display: none;
+    pointer-events: none;
+
+    background-image:
+        linear-gradient(to right, rgba(255,255,255,0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.25) 1px, transparent 1px);
+
+    background-size: 50px 50px;
+}
+
+#painel-iniciativa {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+
+    width: 250px;
+    padding: 20px;
+
+    background: #222;
+    color: white;
+
+    border: 1px solid #555;
+    border-radius: 10px;
+
+    display: none;
+
+    z-index: 200;
+}
+
+#painel-iniciativa h2 {
+    margin-top: 0;
+}
+
+.item-iniciativa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px;
+    margin-bottom: 5px;
+
+    background: #333;
+    border-radius: 5px;
+}
+
+.item-iniciativa.atual {
+    border: 2px solid limegreen;
+}
+
+.item-iniciativa input {
+    width: 50px;
+}
+
+#vez-atual {
+    margin-top: 15px;
+    margin-bottom: 10px;
+
+    padding: 10px;
+
+    background: #333;
+    border-radius: 5px;
+}
+
+#botao-proximo-turno {
+    width: 100%;
+    padding: 10px;
+}

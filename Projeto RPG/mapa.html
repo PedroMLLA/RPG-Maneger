@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+    <button id="botao-menu">☰</button>
+
+    <a href="index.html" class="botao-voltar">← Mapas</a>
+
+    <h1>RPG Manager</h1>
+
+    <div id="botoes-header">
+        <button id="botao-modo-mestre">⚔️ Abrir painel do Mestre</button>
+
+        <button id="botao-regua">📏 Régua</button>
+
+        <button id="botao-escolher-mapa">🗺️ Escolher mapa</button>
+
+        <button id="botao-iniciativa">⚔️ Iniciativa</button>
+
+        <input
+            type="file"
+            id="arquivo-mapa"
+            accept="image/*"
+            style="display: none;"
+        >
+    </div>
+</header>
+    <main id="area-batalha">
+            <aside id="barra-lateral">
+                <h2>Personagens</h2>
+
+                <div id="lista-personagens">
+                    <button id="botao-nero">Nero</button>
+                    <button id="botao-shin">Shin</button>
+                    <button id="botao-jotton">Jotton</button>
+                    <button id="botao-calisto">Calisto</button>
+                </div>
+
+                <button id="botao-criar-personagem">+ Criar personagem</button>
+
+            <div id="formulario-personagem">
+                <input type="text" id="nome-novo-personagem" placeholder="Nome">
+
+                <input type="number" id="hp-novo-personagem" placeholder="HP">
+
+                <input type="number" id="sanidade-novo-personagem" placeholder="Sanidade">
+                <label for="imagem-novo-personagem">Imagem:</label>
+
+                    <input type="file" id="imagem-novo-personagem" accept=".png,image/png">
+
+                    <select id="tipo-novo-personagem">
+                        <option value="player">Jogador</option>
+                        <option value="inimigo">Inimigo</option>
+                    </select>
+
+                    <button id="confirmar-criacao">Criar</button>
+            </div>
+
+                <h2>Inimigos</h2>
+            <div id="lista-inimigos">
+                <button>Bandido</button>
+                <button>Cultista</button>
+            </div>
+            </aside>
+
+            <section id="area-mapa">
+                <h2>Mapa</h2>
+                <div id="mapa">
+
+    <div id="painel-iniciativa">
+
+        <h2>⚔️ Iniciativa</h2>
+
+        <div id="lista-iniciativa"></div>
+
+        <div id="vez-atual">
+            Vez de: -
+        </div>
+
+        <button id="botao-proximo-turno">
+            Próximo
+        </button>
+
+    </div>
+
+    <div id="conteudo-mapa">
+
+        <img id="imagem-mapa" src="" alt="Mapa">
+
+         <div id="grade-mapa"></div>
+
+        <div id="personagens-mapa"></div>
+
+    </div>
+    
+    <div id="regua"></div>
+        <span id="distancia-regua">0 px</span>
+
+    <div id="painel-personagem">
+
+    <h2 id="nome-personagem">Nero</h2>
+
+    <p>HP: <span id="hp-personagem">100</span> / <span id="hp-maximo-personagem">100</span></p>
+
+    <div class="controle-hp">
+
+        <input type="number" id="valor-hp" placeholder="Valor" min="1">
+
+        <button id="botao-dano">Dano</button>
+
+        <button id="botao-cura">Cura</button>
+
+    </div>
+
+        <p>Sanidade: <span id="sanidade-personagem">50</span> / <span id="sanidade-maxima-personagem">50</span></p>
+
+    <div class="controle-sanidade">
+        <input type="number" id="valor-sanidade" placeholder="Valor" min="1">
+        <button id="botao-dano-sanidade">Dano</button>
+        <button id="botao-cura-sanidade">Cura</button>
+    </div>
+
+        <button id="fechar-painel">Fechar</button>
+        <button id="remover-personagem">Remover do mapa</button>
+
+    </div>
+</div>
+    <div id="painel-mestre">
+        <h2>Painel do Mestre</h2>
+        <p>Controles dos inimigos</p>
+    </div>
+</section>
+</main>
+    <script src="script.js"></script>
+</body>
+</html>
