@@ -10,25 +10,15 @@
     <header>
     <button id="botao-menu">☰</button>
 
-    <a href="index.html" class="botao-voltar">← Mapas</a>
+    <a href="index.html" class="botao-voltar">← Início</a>
 
-    <h1>RPG Manager</h1>
+    <h1><span class="marca">RPG</span> Manager</h1>
 
+    <!-- No cabeçalho ficam só as janelas extras (mestre e jogadores) -->
     <div id="botoes-header">
-        <button id="botao-modo-mestre">⚔️ Abrir painel do Mestre</button>
+        <button id="botao-modo-mestre">⚔️ Painel do Mestre</button>
 
-        <button id="botao-regua">📏 Régua</button>
-
-        <button id="botao-escolher-mapa">🗺️ Escolher mapa</button>
-
-        <button id="botao-iniciativa">⚔️ Iniciativa</button>
-
-        <input
-            type="file"
-            id="arquivo-mapa"
-            accept="image/*"
-            style="display: none;"
-        >
+        <button id="botao-visao-jogadores">📺 Visão dos jogadores</button>
     </div>
 </header>
     <main id="area-batalha">
@@ -63,14 +53,34 @@
             </div>
 
                 <h2>Inimigos</h2>
-            <div id="lista-inimigos">
-                <button>Bandido</button>
-                <button>Cultista</button>
+            <div id="lista-inimigos"></div>
+
+                <h2>Campanha</h2>
+            <!-- Backup: baixa um arquivo com tudo, ou carrega de volta -->
+            <div id="acoes-campanha">
+                <button id="botao-nova-batalha">🧹 Nova batalha</button>
+                <button id="botao-exportar">💾 Exportar backup</button>
+                <button id="botao-importar">📂 Importar backup</button>
+                <input type="file" id="arquivo-backup" accept=".json,application/json" hidden>
             </div>
             </aside>
 
             <section id="area-mapa">
                 <h2>Mapa</h2>
+
+            <!-- A moldura segura o mapa e a barra de ferramentas que flutua
+                 por cima dele. A barra fica FORA do #mapa de propósito:
+                 assim clicar nela não arrasta o mapa nem usa a régua. -->
+            <div class="moldura-mapa">
+
+                <div id="ferramentas-mapa">
+                    <button id="botao-regua" title="Medir distâncias">📏 Régua</button>
+                    <button id="botao-iniciativa" title="Mostrar/esconder a iniciativa">⚔️ Iniciativa</button>
+                    <button id="botao-escolher-mapa" title="Trocar a imagem do mapa">🗺️ Trocar mapa</button>
+
+                    <input type="file" id="arquivo-mapa" accept="image/*" hidden>
+                </div>
+
                 <div id="mapa">
 
     <div id="painel-iniciativa">
@@ -118,12 +128,15 @@
 
     </div>
 
+    <!-- Inimigos não têm sanidade: este bloco some quando o painel é de um inimigo -->
+    <div id="bloco-sanidade">
         <p>Sanidade: <span id="sanidade-personagem">50</span> / <span id="sanidade-maxima-personagem">50</span></p>
 
-    <div class="controle-sanidade">
-        <input type="number" id="valor-sanidade" placeholder="Valor" min="1">
-        <button id="botao-dano-sanidade">Dano</button>
-        <button id="botao-cura-sanidade">Cura</button>
+        <div class="controle-sanidade">
+            <input type="number" id="valor-sanidade" placeholder="Valor" min="1">
+            <button id="botao-dano-sanidade">Dano</button>
+            <button id="botao-cura-sanidade">Cura</button>
+        </div>
     </div>
 
         <button id="fechar-painel">Fechar</button>
@@ -131,12 +144,136 @@
 
     </div>
 </div>
-    <div id="painel-mestre">
-        <h2>Painel do Mestre</h2>
-        <p>Controles dos inimigos</p>
-    </div>
+            </div> <!-- fim da .moldura-mapa -->
 </section>
 </main>
-    <script src="script.js"></script>
+    <!-- Menu que aparece ao clicar com o botão direito num personagem -->
+    <div id="menu-contexto">
+        <button id="opcao-vida-visivel"></button>
+        <button id="opcao-inventario">🎒 Inventário</button>
+        <button id="opcao-ficha">📜 Ficha</button>
+        <button id="opcao-habilidades">🔥 Habilidades</button>
+
+        <!-- Condições: valem para aliados e inimigos, e todos veem os ícones -->
+        <div class="menu-secao-condicoes">
+            <p class="menu-rotulo">Condições</p>
+            <div id="condicoes-menu"></div>
+        </div>
+    </div>
+
+    <!-- Janela das habilidades: nome, dados de dano e descrição -->
+    <div id="janela-habilidades" class="janela-modal">
+        <div class="caixa-inventario caixa-habilidades">
+
+            <div class="topo-janela">
+                <h2 id="titulo-habilidades">🔥 Habilidades</h2>
+                <button id="alternar-habilidades-visivel" class="alternar-visivel"></button>
+            </div>
+
+            <!-- Cada habilidade vira um cartão editável aqui dentro -->
+            <div id="lista-habilidades"></div>
+
+            <p id="habilidades-vazio" class="lista-vazia">Nenhuma habilidade ainda.</p>
+
+            <h3 class="subtitulo-janela">Nova habilidade</h3>
+
+            <div class="nova-habilidade">
+                <div class="adicionar-item">
+                    <input type="text" id="nome-habilidade" placeholder="Nome (ex.: Fogo Forja)">
+                    <input type="text" id="dano-habilidade" placeholder="Dano (ex.: 2d6+3)">
+                </div>
+                <textarea id="descricao-habilidade" rows="2" placeholder="Descrição curta do que a habilidade faz"></textarea>
+                <button id="botao-adicionar-habilidade">+ Adicionar habilidade</button>
+            </div>
+
+            <div class="acoes-inventario">
+                <button id="botao-cancelar-habilidades">Cancelar</button>
+                <button id="botao-salvar-habilidades" class="botao-salvar">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Janela do inventário (fica por cima de tudo, com fundo escurecido) -->
+    <div id="janela-inventario" class="janela-modal">
+        <div class="caixa-inventario">
+
+            <div class="topo-janela">
+                <h2 id="titulo-inventario">🎒 Inventário</h2>
+                <!-- Vale na hora, sem precisar de "Salvar" -->
+                <button id="alternar-inventario-visivel" class="alternar-visivel"></button>
+            </div>
+
+            <ul id="lista-inventario" class="lista-edicao"></ul>
+
+            <p id="inventario-vazio" class="lista-vazia">Nenhum item ainda.</p>
+
+            <div class="adicionar-item">
+                <input type="text" id="nome-item" placeholder="Item (ex.: Poção de cura)">
+                <input type="number" id="quantidade-item" min="1" value="1" title="Quantidade">
+                <button id="botao-adicionar-item">Adicionar</button>
+            </div>
+
+            <div class="acoes-inventario">
+                <button id="botao-cancelar-inventario">Cancelar</button>
+                <button id="botao-salvar-inventario" class="botao-salvar">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Janela da ficha: roda de atributos + perícias -->
+    <div id="janela-ficha" class="janela-modal">
+        <div class="caixa-inventario caixa-ficha">
+
+            <div class="topo-janela">
+                <h2 id="titulo-ficha">📜 Ficha</h2>
+                <button id="alternar-ficha-visivel" class="alternar-visivel"></button>
+            </div>
+
+            <!-- A roda de hexágonos é criada pelo ficha.js -->
+            <div id="area-roda"></div>
+
+            <h3 class="subtitulo-janela">Perícias</h3>
+
+            <ul id="lista-pericias" class="lista-edicao"></ul>
+
+            <p id="pericias-vazio" class="lista-vazia">Nenhuma perícia ainda.</p>
+
+            <div class="adicionar-item">
+                <input type="text" id="nome-pericia" placeholder="Perícia (ex.: Furtividade)">
+                <input type="number" id="bonus-pericia" value="0" title="Bônus (pode ser negativo)">
+                <button id="botao-adicionar-pericia">Adicionar</button>
+            </div>
+
+            <div class="acoes-inventario">
+                <button id="botao-cancelar-ficha">Cancelar</button>
+                <button id="botao-salvar-ficha" class="botao-salvar">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Arquivos usados por mais de uma página -->
+    <script src="js/imagens.js"></script>
+    <script src="js/tokens.js"></script>
+    <script src="js/ficha.js"></script>
+
+    <!-- Tela do mestre. A ORDEM importa: dados.js primeiro
+         (todos usam "personagens") e inicio.js por último
+         (ele usa funções de todos os outros). -->
+    <script src="js/dados.js"></script>
+    <script src="js/mapa.js"></script>
+    <script src="js/regua.js"></script>
+    <script src="js/iniciativa.js"></script>
+    <script src="js/tokens-mapa.js"></script>
+    <script src="js/personagens.js"></script>
+    <script src="js/menu-contexto.js"></script>
+    <script src="js/inventario.js"></script>
+    <script src="js/ficha-mestre.js"></script>
+    <script src="js/habilidades.js"></script>
+    <script src="js/sincronizacao.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/inicio.js"></script>
 </body>
 </html>

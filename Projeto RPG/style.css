@@ -1,3 +1,74 @@
+/* =========================================================
+   RPG Manager — identidade "Rua"
+   Preto chapado, texto off-white (cor de papel), vermelho de
+   destaque, títulos enormes e condensados, textura de pontinhos
+   (meio-tom, como impressão de jornal), botões em pílula e
+   etiquetas que parecem adesivos.
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@1&display=swap");
+
+
+/* ---------- 1. Variáveis (as "peças" da identidade) ----------
+   Mudando um valor aqui, ele muda no site inteiro. */
+:root {
+    /* Fundos: pretos neutros, sem puxar para o azul */
+    --fundo: #0b0b0b;
+    --fundo-elevado: #121212;
+    --superficie: #1a1a1a;
+    --superficie-clara: #242424;
+
+    /* Bordas */
+    --borda: #2b2b2b;
+    --borda-forte: #3e3e3e;
+
+    /* Texto: off-white, cor de papel */
+    --texto: #ede8df;
+    --texto-suave: #9d978d;
+    --texto-apagado: #5f5b55;
+    --texto-sobre-destaque: #ffffff;
+    --papel: #ede8df;           /* fundo dos "adesivos" */
+    --tinta: #0b0b0b;           /* texto em cima do papel */
+
+    /* Cor marcante: vermelho (ações principais, turno atual, régua) */
+    --destaque: #e31e24;
+    --destaque-forte: #ff3b40;
+    --destaque-rgb: 227, 30, 36;     /* a mesma cor, em números, para usar com transparência */
+
+    /* Perigo: inimigos, dano, remover */
+    --perigo: #b3101f;
+    --perigo-forte: #ff4757;
+    --perigo-rgb: 179, 16, 31;
+
+    /* Cores de status */
+    --vida: #22c55e;           /* cura */
+    --sanidade: #4d7cff;       /* sanidade */
+
+    /* Fundo dos painéis flutuantes (em números, para usar transparência) */
+    --painel-rgb: 14, 14, 14;
+
+    /* Fontes */
+    --fonte-titulo: "Anton", Impact, "Arial Narrow", sans-serif;     /* títulos grandes e condensados */
+    --fonte-texto: "Space Grotesk", "Segoe UI", Arial, sans-serif;  /* texto do dia a dia */
+    --fonte-serifa: "Instrument Serif", Georgia, serif;             /* detalhe em itálico, com moderação */
+
+    /* Formas, sombras e brilhos */
+    --raio: 10px;
+    --raio-grande: 16px;
+    --pilula: 999px;            /* cantos totalmente redondos */
+    --sombra: 0 14px 40px rgba(0, 0, 0, 0.65);
+    --brilho: 0 0 24px rgba(var(--destaque-rgb), 0.45);
+    --altura-header: 64px;
+    --largura-lateral: 260px;
+
+    /* Velocidade padrão das animações */
+    --rapido: 0.15s;
+    --suave: 0.35s;
+    --curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+
+/* ---------- 2. Base ---------- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -5,28 +76,249 @@
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #181818;
-    color: white;
+    font-family: var(--fonte-texto);
+    font-size: 15px;
+    color: var(--texto);
+    background: var(--fundo);
+    min-height: 100vh;
 
+    /* A Anton só existe em um peso. Isso impede o navegador de
+       "engordar" a letra na marra quando pedimos negrito. */
+    font-synthesis: none;
 }
+
+h1, h2, h3, h4 {
+    font-family: var(--fonte-titulo);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    line-height: 1.05;
+}
+
+/* Detalhe em itálico serifado (use <em> dentro de um texto) */
+em {
+    font-family: var(--fonte-serifa);
+    font-style: italic;
+    font-size: 1.12em;
+    color: var(--texto);
+}
+
+/* Textura de meio-tom: pontinhos, como impressão de jornal.
+   É só um degradê redondo minúsculo repetido em grade. */
+.meio-tom {
+    background-image: radial-gradient(circle, rgba(237, 232, 223, 0.22) 1.1px, transparent 1.5px);
+    background-size: 6px 6px;
+}
+
+/* "Adesivo": etiqueta de papel com texto preto */
+.adesivo,
+#barra-lateral h2,
+#area-mapa > h2,
+.subtitulo-janela,
+body > #painel-mestre > h3 {
+    display: inline-block;
+    padding: 3px 8px 2px;
+
+    font-family: var(--fonte-texto);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.3;
+
+    color: var(--tinta);
+    background: var(--papel);
+    border-radius: 3px;
+}
+
+
+/* ---------- 3. Botões e campos (padrão para o site todo) ---------- */
+button {
+    font-family: var(--fonte-texto);
+    font-size: 14px;
+    font-weight: 500;
+
+    padding: 9px 14px;
+
+    background: var(--superficie);
+    color: var(--texto);
+
+    border: 1px solid var(--borda);
+    border-radius: var(--pilula);
+
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+button:hover {
+    background: var(--superficie-clara);
+    border-color: var(--borda-forte);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input,
+select {
+    font-family: var(--fonte-texto);
+    font-size: 14px;
+
+    width: 100%;
+    padding: 9px 11px;
+
+    background: var(--fundo);
+    color: var(--texto);
+
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+/* Caixa de texto de várias linhas (descrição das habilidades) */
+textarea {
+    font-family: var(--fonte-texto);
+    font-size: 14px;
+    line-height: 1.4;
+
+    width: 100%;
+    padding: 9px 11px;
+    resize: vertical;      /* só deixa esticar para baixo */
+
+    background: var(--fundo);
+    color: var(--texto);
+
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+textarea:focus,
+input:focus,
+select:focus,
+button:focus-visible {
+    outline: none;
+    border-color: var(--destaque);
+    box-shadow: 0 0 0 3px rgba(var(--destaque-rgb), 0.2);
+}
+
+input::placeholder {
+    color: var(--texto-apagado);
+}
+
+input[type="file"] {
+    padding: 7px;
+    font-size: 13px;
+    color: var(--texto-suave);
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--texto-suave);
+    margin: 4px 0 -2px;
+}
+
+/* Variações de botão por função */
+#confirmar-criacao,
+#confirmar-inimigo,
+#botao-proximo-turno,
+#botao-criar-inimigo {
+    background: var(--destaque);
+    color: var(--texto-sobre-destaque);
+    border-color: var(--destaque);
+    font-weight: 600;
+}
+
+#confirmar-criacao:hover,
+#confirmar-inimigo:hover,
+#botao-proximo-turno:hover,
+#botao-criar-inimigo:hover {
+    background: var(--destaque-forte);
+    border-color: var(--destaque-forte);
+}
+
+#botao-dano,
+#botao-dano-sanidade,
+.botao-dano-inimigo {
+    background: rgba(var(--perigo-rgb), 0.18);
+    border-color: var(--perigo);
+    color: #ffb3ba;
+}
+
+#botao-dano:hover,
+#botao-dano-sanidade:hover,
+.botao-dano-inimigo:hover {
+    background: var(--perigo);
+    color: white;
+}
+
+#botao-cura,
+#botao-cura-sanidade,
+.botao-cura-inimigo {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: var(--vida);
+    color: #a7f3c4;
+}
+
+#botao-cura:hover,
+#botao-cura-sanidade:hover,
+.botao-cura-inimigo:hover {
+    background: var(--vida);
+    color: white;
+}
+
+#remover-personagem,
+.botao-excluir-inimigo {
+    background: transparent;
+    border-color: transparent;
+    color: var(--perigo-forte);
+}
+
+#remover-personagem:hover,
+.botao-excluir-inimigo:hover {
+    background: rgba(var(--perigo-rgb), 0.15);
+    border-color: var(--perigo);
+}
+
+
+/* ---------- 4. Cabeçalho ---------- */
 header {
-    height: 60px;
+    height: var(--altura-header);
     width: 100%;
 
     position: fixed;
     top: 0;
     left: 0;
-
-    background: #101010;
+    z-index: 20;
 
     display: flex;
     align-items: center;
-
+    gap: 12px;
     padding: 0 20px;
 
-    z-index: 20;
-    gap: 10px;
+    /* Preto levemente transparente, desfocando o que passa por trás */
+    background: rgba(11, 11, 11, 0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--borda);
+}
+
+header h1 {
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    color: var(--texto);
+    white-space: nowrap;
+}
+
+/* O "RPG" do título fica vermelho (ele está num <span class="marca"> no HTML) */
+header h1 .marca,
+.titulo-inicio .marca {
+    color: var(--destaque);
 }
 
 #botoes-header {
@@ -34,266 +326,378 @@ header {
     display: flex;
     align-items: center;
     gap: 8px;
+    overflow-x: auto;
 }
 
-header h1 {
-    font-size: 22px;
-    margin-left: 15px;
-
+/* Cabeçalho: só as duas janelas extras, lado a lado */
+#botoes-header button {
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-aside {
-    width: 220px;
-    background: #111;
-    padding: 20px;
+/* Painel do Mestre: pílula com contorno */
+#botoes-header #botao-modo-mestre {
+    background: transparent;
+    border-color: var(--borda-forte);
+    color: var(--texto);
 }
 
-aside h2 {
-    font-size: 16px;
-    margin-bottom: 10px;
+#botoes-header #botao-modo-mestre:hover {
+    border-color: var(--texto-suave);
+    background: var(--superficie);
 }
 
-aside button {
-    display: block;
-    width: 100%;
-
-    padding: 10px;
-    margin-bottom: 8px;
-
-    background: #222;
-    color: white;
-
-    border: 1px solid #444;
-    border-radius: 5px;
-
-    cursor: pointer;
+/* Visão dos jogadores: pílula de papel */
+#botoes-header #botao-visao-jogadores {
+    color: var(--tinta);
+    background: var(--papel);
+    border-color: var(--papel);
 }
 
-section {
-    flex: 1;
-    padding: 20px;
+#botoes-header #botao-visao-jogadores:hover {
+    background: #ffffff;
+    color: var(--tinta);
 }
 
-section h2{
-    margin-bottom: 10px;
+/* Em telas pequenas, o título sai para sobrar espaço aos botões */
+@media (max-width: 760px) {
+    header h1 {
+        display: none;
+    }
 }
 
-main{
-    height: calc(100vh - 60px);
-}
 
-#mapa {
+/* ---------- Barra de ferramentas do mapa ---------- */
+/* A moldura ocupa o lugar que era do #mapa e serve de referência
+   para posicionar a barra flutuante */
+.moldura-mapa {
     position: relative;
-    
-    width: 100%;
-    height: calc(100% - 35px);
-
-    background: #292929;
-
-    border: 2px solid #444;
-    border-radius: 8px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
 }
 
-#mapa img {
-   display: block;
-    user-select: none;
-    -webkit-user-drag: none;
+/* Barra flutuante, centralizada embaixo do mapa */
+#ferramentas-mapa {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    z-index: 30;
+    /* "translate" (e não "transform") para não brigar com a animação de entrada */
+    translate: -50% 0;
+
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+
+    background: rgba(var(--painel-rgb), 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--borda-forte);
+    border-radius: var(--pilula);
+    box-shadow: var(--sombra);
+
+    animation: subir-aparecendo 0.5s var(--curva) 0.3s both;
+}
+
+#ferramentas-mapa button {
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+
+    background: transparent;
+    border-color: transparent;
+    color: var(--texto-suave);
+}
+
+#ferramentas-mapa button:hover {
+    color: var(--texto);
+    background: var(--superficie-clara);
+}
+
+/* Ferramenta ligada (régua ativa, iniciativa aberta): pílula vermelha */
+#ferramentas-mapa button.ativo {
+    color: #ffffff;
+    background: var(--destaque);
+}
+
+#ferramentas-mapa button.ativo:hover {
+    background: var(--destaque-forte);
 }
 
 #botao-menu {
     background: none;
     border: none;
-    color: white;
-
-    font-size: 25px;
-    cursor: pointer;
+    color: var(--texto);
+    font-size: 24px;
+    padding: 4px 8px;
 }
 
+#botao-menu:hover {
+    background: var(--superficie);
+    color: var(--destaque);
+}
+
+.botao-voltar {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 7px 12px;
+
+    color: var(--texto-suave);
+    font-size: 14px;
+    text-decoration: none;
+
+    border: 1px solid var(--borda);
+    border-radius: var(--pilula);
+    transition: 0.15s;
+}
+
+.botao-voltar:hover {
+    color: var(--texto);
+    border-color: var(--destaque);
+}
+
+
+/* ---------- 5. Página inicial ---------- */
+.inicio {
+    min-height: 100vh;
+    padding: calc(var(--altura-header) + 40px) 24px 40px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px;
+}
+
+/* Título gigante, ocupando quase a largura da tela */
+.inicio .titulo-inicio {
+    font-size: clamp(72px, 15vw, 220px);
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    color: var(--texto);
+}
+
+/* No título, cada palavra fica numa linha */
+.titulo-inicio .marca {
+    display: block;
+}
+
+.inicio .subtitulo-inicio {
+    color: var(--texto-suave);
+    font-size: 18px;
+    max-width: 460px;
+    margin: 6px 0 14px;
+}
+
+/* Botão pílula vermelho, com a setinha ↗ que anda no hover */
+.botao-iniciar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 30px;
+
+    font-family: var(--fonte-texto);
+    font-size: 17px;
+    font-weight: 700;
+    text-decoration: none;
+
+    color: var(--texto-sobre-destaque);
+    background: var(--destaque);
+
+    border-radius: var(--pilula);
+
+    transition: transform 0.2s, background 0.2s;
+}
+
+.botao-iniciar .seta {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.botao-iniciar:hover {
+    background: var(--destaque-forte);
+    transform: translateY(-2px);
+}
+
+.botao-iniciar:hover .seta {
+    transform: translate(3px, -3px);
+}
+
+
+/* ---------- 6. Tela de batalha: estrutura ---------- */
+#area-batalha {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#area-mapa {
+    height: 100%;
+    padding: calc(var(--altura-header) + 16px) 16px 16px;
+
+    display: flex;
+    flex-direction: column;
+
+    transition: padding-left 0.3s ease;
+}
+
+/* Com a barra lateral aberta, o mapa anda para o lado e não fica escondido */
+#barra-lateral:not(.fechada) ~ #area-mapa {
+    padding-left: calc(var(--largura-lateral) + 16px);
+}
+
+/* O visual de "adesivo" vem da regra .adesivo, lá no começo */
+#area-mapa > h2 {
+    align-self: flex-start;
+    margin-bottom: 10px;
+}
+
+
+/* ---------- 7. Barra lateral ---------- */
 #barra-lateral {
     position: fixed;
-
-    top: 60px;
+    top: var(--altura-header);
     left: 0;
-
-    width: 250px;
-    height: calc(100vh - 60px);
-
-    background: #111;
-    padding: 20px;
-    border-right: 1px solid #333;
-    transition: transform 0.3s ease;
     z-index: 10;
+
+    width: var(--largura-lateral);
+    height: calc(100vh - var(--altura-header));
+    padding: 20px 16px;
+    overflow-y: auto;
+
+    background: var(--fundo-elevado);
+    border-right: 1px solid var(--borda);
+
+    transition: transform 0.3s ease;
 }
 
 #barra-lateral.fechada {
     transform: translateX(-100%);
 }
 
-.inicio {
-    padding: 100px 40px 40px;
+#barra-lateral h2 {
+    margin: 18px 0 10px;
 }
 
-.inicio h2{
-    margin-bottom: 30px;
+#barra-lateral h2:first-child {
+    margin-top: 0;
 }
 
-.lista-mapas {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+#lista-personagens button,
+#lista-inimigos button {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    text-align: left;
 }
 
-.mapa-card {
-    width: 250px;
-    min-height: 150px;
-    padding: 20px;
-
-    background: #222;
-    border: 1px solid #444;
-    border-radius: 10px;
-
-    color: white;
-    text-decoration: none;
-
-    transition: 0.2s;
-}
-
-.mapa-card:hover {
-    transform: translateY(-5px);
-    border-color: #777;
-}
-
-.mapa-card h3 {
-    margin-bottom: 10px;
-}
-
-.mapa-card p {
-    color: #aaa;
-}
-
-.botao-voltar {
+/* Bolinha antes do nome: branca para aliados, vermelha para inimigos */
+#lista-personagens button::before,
+#lista-inimigos button::before {
+    content: "";
     display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 9px;
+    vertical-align: 1px;
 
-    margin-left: 20px;
-    margin-right: 20px;
-
-    padding: 8px 12px;
-
-    background: #222;
-    color: white;
-
-    border: 1px solid #444;
-    border-radius: 6px;
-
-    text-decoration: none;
-
-    font-size: 14px;
-}
-
-.botao-voltar:hover {
-    background: #333;
-}
-
-.lista-campanhas {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.campanha-card {
-    width: 280px;
-    min-height: 160px;
-
-    padding: 25px;
-
-    background: #222;
-    border: 1px solid #444;
-    border-radius: 10px;
-    
-    color: white;
-    text-decoration: none;
-
-    transition: 0.2s;
-}
-
-.campanha-card:hover {
-    transform: translateY(-5px);
-    border-color: #777;
-}
-
-.campanha-card h3 {
-margin-bottom: 10px;
-}
-
-.campanha-card p {
-    color: #aaa;
-}
-
-#area-batalha {
-    position: relative;
-
-    width: 100vw;
-    height: 100vh;
-
-    overflow: hidden;
-}
-
-#area-mapa {
-    width: 100%;
-    height: 100%;
-}
-
-#mapa {
-    width: 100%;
-    height: 100%;
-
-    position: relative;
-
-    overflow: hidden;
-}
-
-#mapa img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: contain;
-}
-
-#personagens-mapa {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.boneco {
-    position: absolute;
-    width: 20px;
-    height: 20px;
+    background: var(--texto);
     border-radius: 50%;
-    background: rgb(7, 7, 7);
-    border: 3px solid black;
+}
+
+#lista-inimigos button::before {
+    background: var(--destaque);
+}
+
+/* Botões de backup da campanha */
+#acoes-campanha {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: grab;
-    pointer-events: auto;
-    user-select: none;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.boneco.imagem-personagem {
-    border-radius: 0;
-    background-color: transparent;
-    border: none;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 80px;
-    height: 80px;
+#acoes-campanha button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border-style: dashed;
+    color: var(--texto-suave);
 }
 
-.boneco:active {
-    cursor: grabbing;
+#acoes-campanha button:hover {
+    color: var(--texto);
+    border-style: solid;
+    border-color: var(--texto-suave);
+}
+
+/* Nova batalha apaga o mapa, então se destaca em vermelho */
+#acoes-campanha #botao-nova-batalha {
+    color: var(--destaque-forte);
+    border-color: rgba(var(--destaque-rgb), 0.55);
+}
+
+#acoes-campanha #botao-nova-batalha:hover {
+    color: #ffffff;
+    background: var(--destaque);
+    border-color: var(--destaque);
+}
+
+#botao-criar-personagem {
+    width: 100%;
+    margin-top: 6px;
+
+    background: transparent;
+    border-style: dashed;
+    color: var(--texto-suave);
+}
+
+#botao-criar-personagem:hover {
+    color: var(--destaque-forte);
+    border-color: var(--destaque);
+}
+
+#formulario-personagem {
+    display: none;
+    margin-top: 10px;
+    padding: 14px;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+#formulario-personagem input,
+#formulario-personagem select,
+#formulario-personagem button {
+    margin-bottom: 8px;
+}
+
+#formulario-personagem button {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+
+/* ---------- 8. Mapa ---------- */
+#mapa {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+
+    /* Pontinhos de meio-tom bem fracos no fundo, onde o mapa não cobre */
+    background:
+        radial-gradient(circle, rgba(237, 232, 223, 0.08) 1.1px, transparent 1.5px) 0 0 / 6px 6px,
+        var(--fundo-elevado);
+    border: 1px solid var(--borda-forte);
+    border-radius: var(--raio-grande);
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.7), var(--sombra);
 }
 
 #conteudo-mapa {
@@ -303,76 +707,13 @@ margin-bottom: 10px;
     transform-origin: 0 0;
 }
 
-#painel-personagem {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-
-    width: 220px;
-    padding: 20px;
-
-    background: #222;
-    border: 1px solid #555;
-    border-radius: 10px;
-
-    color: white;
-
-    display: none;
-}
-
-#formulario-personagem {
-    display: none;
-}
-
-#painel-mestre {
-    position: absolute;
-    top: 20px;
-    left: 10px;
-    width: 300px;
-    padding: 20px;
-    background: #222;
-    border: 1px solid #555;
-    border-radius: 10px;
-    color: white;
+#mapa img {
     display: block;
-}
-
-.inimigo-mestre {
-    margin-top: 20px;
-    padding: 15px;
-    background: #333;
-    border-radius: 8px;
-}
-
-.inimigo-mestre h4 {
-    margin-top: 0;
-}
-
-.inimigo-mestre input {
-    width: 80px;
-    padding: 8px;
-}
-#regua {
-    position: absolute;
-    height: 3px;
-    background: red;
-    transform-origin: left center;
-    display: none;
-    pointer-events: none;
-    z-index: 100;
-}
-
-#distancia-regua {
-    position: absolute;
-    display: none;
-    background: #222;
-    color: white;
-    padding: 5px 8px;
-    border-radius: 5px;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 101;
-    white-space: nowrap;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 #grade-mapa {
@@ -386,66 +727,1493 @@ margin-bottom: 10px;
     pointer-events: none;
 
     background-image:
-        linear-gradient(to right, rgba(255,255,255,0.25) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.25) 1px, transparent 1px);
-
+        linear-gradient(to right, rgba(var(--destaque-rgb), 0.22) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(var(--destaque-rgb), 0.22) 1px, transparent 1px);
     background-size: 50px 50px;
 }
 
-#painel-iniciativa {
+
+/* ---------- 9. Tokens ---------- */
+#personagens-mapa {
     position: absolute;
-    top: 20px;
-    right: 20px;
-
-    width: 250px;
-    padding: 20px;
-
-    background: #222;
-    color: white;
-
-    border: 1px solid #555;
-    border-radius: 10px;
-
-    display: none;
-
-    z-index: 200;
+    inset: 0;
+    pointer-events: none;
 }
 
-#painel-iniciativa h2 {
+/* Token sem imagem: um disco com a inicial do nome */
+.boneco {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: var(--fonte-titulo);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--texto);
+
+    /* Aliados: disco grafite com borda branca. Inimigos: vermelho (abaixo) */
+    background: radial-gradient(circle at 35% 30%, #2b3039, #0f1115);
+    border: 2px solid var(--texto);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+
+    cursor: grab;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.boneco.token-inimigo {
+    color: #ffffff;
+    background: radial-gradient(circle at 35% 30%, #a3121f, #3a060b);
+    border-color: var(--perigo-forte);
+}
+
+/* Token com imagem: mostra o PNG recortado, com sombra embaixo */
+.boneco.imagem-personagem {
+    width: 80px;
+    height: 80px;
+
+    background-color: transparent;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.7));
+}
+
+.boneco:hover {
+    filter: drop-shadow(0 0 8px rgba(var(--destaque-rgb), 0.6));
+}
+
+.boneco:active {
+    cursor: grabbing;
+}
+
+/* Na tela do mestre: um olhinho no token cuja vida os jogadores estão vendo */
+.boneco.vida-visivel::after {
+    content: "👁";
+
+    position: absolute;
+    top: -8px;
+    right: -8px;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 12px;
+    background: var(--fundo-elevado);
+    border: 1px solid var(--destaque);
+    border-radius: 50%;
+}
+
+
+/* ---------- Condições e inimigo derrotado (nas duas telas) ---------- */
+/* Faixa de ícones embaixo do token */
+.condicoes-token {
+    position: absolute;
+    left: 50%;
+    bottom: -11px;
+    translate: -50% 0;
+
+    display: flex;
+    gap: 2px;
+    pointer-events: none;
+}
+
+.condicoes-token span {
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 12px;
+    background: var(--fundo-elevado);
+    border: 1px solid var(--borda-forte);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+
+    animation: token-surgir 0.3s var(--curva) both;
+}
+
+/* Inimigo com vida zerada: escurecido e com um X vermelho por cima */
+.boneco.derrotado::before {
+    content: "✕";
+
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: var(--fonte-texto);
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--destaque-forte);
+
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+}
+
+/* Painel de vida quando é de um inimigo: faixa vermelha no topo */
+#painel-personagem.painel-inimigo {
+    border-top-color: var(--destaque);
+}
+
+#painel-personagem.painel-inimigo h2::before {
+    content: "Inimigo";
+    display: block;
+    margin-bottom: 4px;
+
+    font-family: var(--fonte-texto);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--destaque-forte);
+}
+
+
+/* ---------- Menu do botão direito ---------- */
+#menu-contexto {
+    position: fixed;
+    z-index: 500;
+    display: none;
+
+    min-width: 220px;
+    padding: 6px;
+
+    background: var(--fundo-elevado);
+    border: 1px solid var(--borda-forte);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+
+#menu-contexto button {
+    display: block;
+    width: 100%;
+    text-align: left;
+
+    background: transparent;
+    border-color: transparent;
+}
+
+#menu-contexto button:hover {
+    background: var(--superficie-clara);
+    border-color: var(--destaque);
+    color: var(--destaque-forte);
+}
+
+/* Sem isso, a regra "display: block" dos botões ganharia do atributo hidden */
+#menu-contexto [hidden] {
+    display: none;
+}
+
+.menu-secao-condicoes {
+    margin-top: 6px;
+    padding: 8px 6px 4px;
+    border-top: 1px solid var(--borda);
+}
+
+.menu-rotulo {
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--texto-apagado);
+}
+
+/* 4 condições por linha */
+#condicoes-menu {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+}
+
+#menu-contexto .chip-condicao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    padding: 6px 0;
+
+    font-size: 16px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+#menu-contexto .chip-condicao:hover {
+    background: var(--superficie-clara);
+    border-color: var(--borda-forte);
+}
+
+/* Condição ligada: fundo vermelho */
+#menu-contexto .chip-condicao.ativo {
+    background: var(--destaque);
+    border-color: var(--destaque);
+}
+
+
+/* ---------- Janelas do inventário e da ficha (tela do mestre) ---------- */
+.janela-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+
+    /* "flex" é ligado pelo JS; serve para centralizar a caixa */
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+}
+
+.caixa-inventario {
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+
+    padding: 22px;
+
+    background: var(--fundo-elevado);
+    border: 1px solid var(--borda-forte);
+    border-top: 3px solid var(--destaque);
+    border-radius: var(--raio-grande);
+    box-shadow: var(--sombra);
+}
+
+/* Título à esquerda e botão "mostrar aos jogadores" à direita */
+.topo-janela {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.topo-janela h2 {
+    font-size: 20px;
+    color: var(--destaque-forte);
+}
+
+/* Botão de mostrar/esconder: apagado quando escondido, dourado quando visível */
+.alternar-visivel {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--texto-suave);
+    background: transparent;
+}
+
+.alternar-visivel.ativo {
+    color: var(--texto-sobre-destaque);
+    background: var(--destaque);
+    border-color: var(--destaque);
+    font-weight: 600;
+}
+
+.alternar-visivel.ativo:hover {
+    background: var(--destaque-forte);
+    border-color: var(--destaque-forte);
+}
+
+.subtitulo-janela {
+    margin: 18px 0 10px;
+}
+
+.caixa-ficha {
+    width: min(520px, calc(100vw - 32px));
+}
+
+/* ----- Janela das habilidades ----- */
+.caixa-habilidades {
+    width: min(560px, calc(100vw - 32px));
+}
+
+#lista-habilidades {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Cada habilidade já salva vira um cartão com campos editáveis */
+.cartao-habilidade-edicao {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding: 10px;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-left: 3px solid var(--destaque);
+    border-radius: var(--raio);
+
+    animation: subir-aparecendo 0.25s var(--curva) both;
+}
+
+.linha-habilidade {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.linha-habilidade .campo-nome {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.linha-habilidade .campo-dano {
+    width: 110px;
+    flex: none;
+    text-align: center;
+    color: var(--destaque-forte);
+    font-weight: 600;
+}
+
+.cartao-habilidade-edicao .campo-descricao {
+    font-size: 13px;
+    color: var(--texto-suave);
+}
+
+/* Formulário de nova habilidade */
+.nova-habilidade {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nova-habilidade .adicionar-item {
     margin-top: 0;
 }
 
+.nova-habilidade #dano-habilidade {
+    width: 150px;
+    flex: none;
+}
+
+#botao-adicionar-habilidade {
+    align-self: flex-end;
+}
+
+.lista-edicao {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.item-inventario {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 6px 6px 6px 12px;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+.nome-item-inventario {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.item-inventario input {
+    width: 64px;
+    padding: 6px;
+    text-align: center;
+}
+
+.remover-item {
+    padding: 6px 10px;
+    background: transparent;
+    border-color: transparent;
+    color: var(--perigo-forte);
+}
+
+.remover-item:hover {
+    background: rgba(var(--perigo-rgb), 0.15);
+    border-color: var(--perigo);
+}
+
+.lista-vazia {
+    padding: 14px;
+    text-align: center;
+    color: var(--texto-apagado);
+    border: 1px dashed var(--borda);
+    border-radius: var(--raio);
+}
+
+.adicionar-item {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+}
+
+.adicionar-item #nome-item {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Campos de número (quantidade, bônus) ficam estreitos */
+.adicionar-item input[type="number"] {
+    width: 64px;
+    flex: none;
+    text-align: center;
+}
+
+.acoes-inventario {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borda);
+}
+
+.botao-salvar {
+    background: var(--destaque);
+    color: var(--texto-sobre-destaque);
+    border-color: var(--destaque);
+    font-weight: 600;
+    padding-left: 22px;
+    padding-right: 22px;
+}
+
+.botao-salvar:hover {
+    background: var(--destaque-forte);
+    border-color: var(--destaque-forte);
+}
+
+
+/* ---------- Roda de atributos (ficha.js) ---------- */
+.roda-atributos {
+    position: relative;
+    width: 100%;
+    /* Mantém a proporção do desenho (600 x 540) em qualquer largura */
+    aspect-ratio: 600 / 540;
+}
+
+.desenho-roda {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.raio-luz {
+    fill: url(#raio-gradiente);
+}
+
+.conexao-hex {
+    stroke: #cfcfcf;
+    stroke-width: 2.4;
+    stroke-dasharray: 12 4 3 4;
+    stroke-linecap: round;
+}
+
+.hex-sombra {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.55);
+    stroke-width: 3;
+}
+
+.hex-moldura {
+    fill: none;
+    stroke: url(#metal-hex);
+    stroke-width: 9;
+    stroke-linejoin: round;
+}
+
+.hex-miolo {
+    fill: rgba(var(--painel-rgb), 0.82);
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1.5;
+}
+
+.hex-etiqueta-fundo {
+    fill: #0f1115;
+    stroke: #bdbdbd;
+    stroke-width: 1.5;
+}
+
+.hex-etiqueta {
+    fill: #f2f2f2;
+    font-family: var(--fonte-titulo);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-anchor: middle;
+}
+
+/* O número dentro de cada hexágono (campo na tela do mestre, texto nos jogadores) */
+.valor-atributo {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 17%;
+
+    font-family: var(--fonte-titulo);
+    font-size: clamp(20px, 6vw, 34px);
+    font-weight: 800;
+    text-align: center;
+    color: var(--texto);
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+input.valor-atributo {
+    padding: 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+}
+
+input.valor-atributo:hover {
+    border-color: var(--borda-forte);
+}
+
+input.valor-atributo:focus {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* Tira as setinhas do campo de número dentro dos hexágonos */
+input.valor-atributo::-webkit-inner-spin-button,
+input.valor-atributo::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input.valor-atributo {
+    -moz-appearance: textfield;
+}
+
+
+/* ---------- 10. Painéis flutuantes sobre o mapa ---------- */
+#painel-personagem,
+#painel-iniciativa {
+    position: absolute;
+    top: 16px;
+
+    padding: 18px;
+
+    background: rgba(var(--painel-rgb), 0.94);
+    border: 1px solid var(--borda-forte);
+    border-top: 3px solid var(--destaque);
+    border-radius: var(--raio-grande);
+    box-shadow: var(--sombra);
+    backdrop-filter: blur(6px);
+
+    display: none;
+    z-index: 200;
+}
+
+#painel-personagem {
+    right: 16px;
+    width: 250px;
+}
+
+#painel-iniciativa {
+    left: 16px;
+    width: 260px;
+}
+
+#painel-personagem h2,
+#painel-iniciativa h2 {
+    font-size: 18px;
+    color: var(--destaque-forte);
+    margin-bottom: 14px;
+}
+
+#painel-personagem p {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--texto-suave);
+    margin-bottom: 6px;
+}
+
+#painel-personagem p span {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--texto);
+}
+
+#hp-personagem {
+    color: var(--perigo-forte) !important;
+}
+
+#sanidade-personagem {
+    color: var(--sanidade) !important;
+}
+
+.controle-hp,
+.controle-sanidade {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.controle-hp input,
+.controle-sanidade input {
+    flex: 1;
+    min-width: 0;
+}
+
+#fechar-painel,
+#remover-personagem {
+    width: 100%;
+    margin-top: 6px;
+}
+
+
+/* ---------- 11. Iniciativa ---------- */
 .item-iniciativa {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
 
-    padding: 8px;
-    margin-bottom: 5px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
 
-    background: #333;
-    border-radius: 5px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
 }
 
 .item-iniciativa.atual {
-    border: 2px solid limegreen;
+    border-color: var(--destaque);
+    background: rgba(var(--destaque-rgb), 0.12);
+    box-shadow: 0 0 14px rgba(var(--destaque-rgb), 0.25);
+}
+
+.item-iniciativa.atual span {
+    color: var(--destaque-forte);
+    font-weight: 600;
 }
 
 .item-iniciativa input {
-    width: 50px;
+    width: 60px;
+    text-align: center;
+    padding: 6px;
 }
 
 #vez-atual {
-    margin-top: 15px;
-    margin-bottom: 10px;
-
+    margin: 14px 0 10px;
     padding: 10px;
 
-    background: #333;
-    border-radius: 5px;
+    font-family: var(--fonte-titulo);
+    text-align: center;
+    color: var(--destaque-forte);
+
+    background: var(--fundo);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
 }
 
 #botao-proximo-turno {
     width: 100%;
-    padding: 10px;
+}
+
+
+/* ---------- 12. Régua ---------- */
+#regua {
+    position: absolute;
+    height: 3px;
+
+    background: var(--destaque-forte);
+    box-shadow: 0 0 8px rgba(var(--destaque-rgb), 0.8);
+    border-radius: 2px;
+
+    transform-origin: left center;
+    display: none;
+    pointer-events: none;
+    z-index: 100;
+}
+
+#distancia-regua {
+    position: absolute;
+    display: none;
+
+    padding: 5px 9px;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto-sobre-destaque);
+    background: var(--destaque-forte);
+    border-radius: 6px;
+    box-shadow: var(--sombra);
+
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 101;
+}
+
+
+/* ---------- 13. Visão dos Jogadores (jogador.html) ---------- */
+body.visao-jogadores {
+    overflow: hidden;
+    background:
+        radial-gradient(circle, rgba(237, 232, 223, 0.08) 1.1px, transparent 1.5px) 0 0 / 6px 6px,
+        var(--fundo);
+}
+
+#mapa-jogadores {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+}
+
+/* Aqui a imagem fica no tamanho original; quem encaixa na tela é o JS */
+#mapa-jogadores img {
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Os jogadores só olham: nada de arrastar nem brilho ao passar o mouse */
+.visao-jogadores .boneco {
+    cursor: default;
+}
+
+.visao-jogadores .boneco:hover {
+    filter: none;
+}
+
+.visao-jogadores .boneco.imagem-personagem:hover {
+    filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.7));
+}
+
+/* Quem está jogando agora ganha um brilho dourado pulsando */
+.token-da-vez {
+    animation: brilho-da-vez 1.6s ease-in-out infinite;
+}
+
+@keyframes brilho-da-vez {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(var(--destaque-rgb), 0.5)); }
+    50%      { filter: drop-shadow(0 0 16px rgba(var(--destaque-rgb), 1)); }
+}
+
+#vez-jogadores {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* "Adesivo" de papel, um pouquinho torto, com o nome em letra grande */
+    padding: 6px 20px 4px;
+
+    font-family: var(--fonte-titulo);
+    font-size: 30px;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--tinta);
+
+    background: var(--papel);
+    border-radius: 4px;
+    box-shadow: 6px 6px 0 var(--destaque);   /* sombra "chapada" vermelha */
+    rotate: -1.5deg;
+
+    display: none;
+}
+
+
+/* Painel do grupo: vida e sanidade dos aliados, na lateral esquerda */
+#grupo-jogadores {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    bottom: 20px;
+    width: 250px;
+
+    display: none;              /* o JS troca para flex quando há aliados */
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.cartao-aliado {
+    padding: 12px 14px;
+
+    background: rgba(var(--painel-rgb), 0.88);
+    border: 1px solid var(--borda-forte);
+    border-left: 3px solid var(--destaque);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+
+.cartao-aliado h3 {
+    font-size: 17px;
+    color: var(--texto);
+    margin-bottom: 8px;
+}
+
+.cartao-aliado.da-vez {
+    border-color: var(--destaque);
+    box-shadow: 0 0 18px rgba(var(--destaque-rgb), 0.45);
+}
+
+.cartao-aliado.da-vez h3 {
+    color: var(--destaque-forte);
+}
+
+/* Personagem com vida zerada fica apagado */
+.cartao-aliado.caido {
+    opacity: 0.45;
+    filter: grayscale(1);
+}
+
+.barra-status {
+    margin-top: 6px;
+}
+
+.barra-topo {
+    display: flex;
+    justify-content: space-between;
+
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--texto-suave);
+    margin-bottom: 3px;
+}
+
+.barra-numeros {
+    font-weight: 600;
+    color: var(--texto);
+}
+
+.barra-fundo {
+    height: 9px;
+    background: #000;
+    border: 1px solid var(--borda);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+/* A largura (em %) é definida pelo JS; a transição faz a barra "escorrer" */
+.barra-preenchida {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+.barra-vida .barra-preenchida {
+    background: linear-gradient(to right, #8f0d19, var(--perigo-forte));
+}
+
+.barra-sanidade .barra-preenchida {
+    background: linear-gradient(to right, #2a4bb8, var(--sanidade));
+}
+
+
+/* Inventários na visão dos jogadores: coluna da direita */
+#inventarios-jogadores {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    bottom: 20px;
+    width: 250px;
+
+    display: none;              /* o JS troca para flex quando há itens */
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.cartao-inventario {
+    padding: 12px 14px;
+
+    background: rgba(var(--painel-rgb), 0.88);
+    border: 1px solid var(--borda-forte);
+    border-right: 3px solid var(--destaque);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+}
+
+.cartao-inventario h3 {
+    font-size: 16px;
+    color: var(--destaque-forte);
+    margin-bottom: 8px;
+}
+
+.cartao-inventario ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.cartao-inventario li {
+    display: flex;
+    gap: 8px;
+}
+
+.quantidade-item {
+    min-width: 28px;
+    font-weight: 600;
+    color: var(--destaque);
+}
+
+/* Habilidades na visão dos jogadores (mesma coluna dos inventários) */
+.habilidade-jogadores {
+    padding: 8px 0;
+    border-top: 1px solid var(--borda);
+}
+
+.habilidade-jogadores:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+
+.topo-habilidade {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 14px;
+}
+
+/* Os dados de dano numa pílula vermelha, tipo "2d6+3" */
+.dano-habilidade {
+    flex: none;
+    padding: 2px 9px;
+
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--destaque);
+    border-radius: var(--pilula);
+}
+
+.habilidade-jogadores p {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--texto-suave);
+}
+
+
+/* Fichas liberadas: no centro da tela dos jogadores, por cima do mapa */
+#fichas-jogadores {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+
+    display: none;              /* o JS troca para flex quando há fichas */
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 80px 290px 24px;   /* deixa livres as colunas de vida e inventário */
+    overflow-y: auto;
+
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.cartao-ficha {
+    width: min(460px, 100%);
+    padding: 16px 18px 18px;
+
+    background: rgba(var(--painel-rgb), 0.92);
+    border: 1px solid var(--borda-forte);
+    border-top: 3px solid var(--destaque);
+    border-radius: var(--raio-grande);
+    box-shadow: var(--sombra);
+}
+
+.cartao-ficha h3 {
+    font-size: 20px;
+    color: var(--destaque-forte);
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.cartao-ficha .valor-atributo {
+    font-size: 34px;
+}
+
+.pericias-jogadores {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.pericias-jogadores li {
+    display: flex;
+    gap: 6px;
+    padding: 5px 10px;
+
+    font-size: 14px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 999px;
+}
+
+.bonus-pericia {
+    font-weight: 700;
+    color: var(--destaque-forte);
+}
+
+
+/* ---------- 14. Painel do Mestre (mestre.html) ---------- */
+body > #painel-mestre {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 24px 18px;
+}
+
+body > #painel-mestre > h2 {
+    font-size: 22px;
+    color: var(--destaque);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--borda);
+}
+
+body > #painel-mestre > h3 {
+    margin-bottom: 12px;
+}
+
+#botao-criar-inimigo {
+    width: 100%;
+}
+
+#formulario-inimigo {
+    margin-top: 12px;
+    padding: 14px;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+#formulario-inimigo input,
+#formulario-inimigo select {
+    margin-bottom: 8px;
+}
+
+#formulario-inimigo button {
+    width: 100%;
+}
+
+.inimigo-mestre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 14px;
+    padding: 14px;
+
+    background: var(--fundo-elevado);
+    border: 1px solid var(--borda);
+    border-left: 3px solid var(--perigo);
+    border-radius: var(--raio);
+}
+
+.inimigo-mestre h4 {
+    width: 100%;
+    font-size: 17px;
+    color: var(--texto);
+}
+
+.inimigo-mestre p {
+    width: 100%;
+    font-size: 13px;
+    color: var(--texto-suave);
+}
+
+.hp-inimigo {
+    color: var(--perigo-forte);
+    font-weight: 600;
+}
+
+.inimigo-mestre input {
+    width: 80px;
+    padding: 7px;
+}
+
+.botao-adicionar-mapa {
+    flex: 1;
+    border-color: var(--destaque);
+    color: var(--destaque-forte);
+}
+
+
+/* =========================================================
+   15. Animações e efeitos visuais
+   Um @keyframes descreve o "filme" da animação (de onde sai,
+   aonde chega). Depois, "animation:" aplica esse filme num elemento.
+   ========================================================= */
+
+/* ----- Os "filmes" ----- */
+@keyframes aparecer {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes subir-aparecendo {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes descer-aparecendo {
+    from { opacity: 0; transform: translateY(-100%); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes zoom-aparecendo {
+    from { opacity: 0; transform: scale(0.94) translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes deslizar-da-esquerda {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes deslizar-da-direita {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes linha-correndo {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+@keyframes pulso-vermelho {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--destaque-rgb), 0.55); }
+    50%      { box-shadow: 0 0 0 8px rgba(var(--destaque-rgb), 0); }
+}
+
+@keyframes reflexo-passando {
+    from { transform: translateX(-120%) skewX(-20deg); }
+    to   { transform: translateX(320%) skewX(-20deg); }
+}
+
+@keyframes luz-respirando {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50%      { opacity: 0.9;  transform: scale(1.08); }
+}
+
+@keyframes grade-andando {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 0 60px, 60px 0; }
+}
+
+@keyframes token-surgir {
+    0%   { transform: scale(0);    opacity: 0; }
+    70%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+/* Tremida + clarão vermelho quando o personagem leva dano */
+@keyframes tremer {
+    0%, 100% { translate: 0 0; }
+    20%      { translate: -6px 0; }
+    40%      { translate: 6px 0; }
+    60%      { translate: -4px 0; }
+    80%      { translate: 3px 0; }
+}
+
+@keyframes clarao-dano {
+    0%   { filter: drop-shadow(0 0 0 rgba(var(--perigo-rgb), 0)) brightness(1); }
+    25%  { filter: drop-shadow(0 0 14px rgba(255, 40, 60, 1)) brightness(1.6); }
+    100% { filter: drop-shadow(0 0 0 rgba(var(--perigo-rgb), 0)) brightness(1); }
+}
+
+@keyframes fundo-dano {
+    from { background-color: rgba(var(--perigo-rgb), 0.55); }
+    to   { background-color: rgba(var(--painel-rgb), 0.88); }
+}
+
+@keyframes vez-trocou {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.7); }
+    60%  { opacity: 1; transform: translateX(-50%) scale(1.08); }
+    100% { transform: translateX(-50%) scale(1); }
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+
+/* ----- Entrada das telas ----- */
+body {
+    animation: aparecer 0.4s ease both;
+}
+
+header {
+    animation: descer-aparecendo 0.5s var(--curva) both;
+}
+
+#mapa {
+    animation: zoom-aparecendo 0.6s var(--curva) 0.1s both;
+}
+
+/* Botões da barra lateral entram um depois do outro */
+#lista-personagens button,
+#lista-inimigos button {
+    animation: deslizar-da-esquerda 0.4s var(--curva) both;
+}
+
+#lista-personagens button:nth-child(2), #lista-inimigos button:nth-child(2) { animation-delay: 0.05s; }
+#lista-personagens button:nth-child(3), #lista-inimigos button:nth-child(3) { animation-delay: 0.10s; }
+#lista-personagens button:nth-child(4), #lista-inimigos button:nth-child(4) { animation-delay: 0.15s; }
+#lista-personagens button:nth-child(5), #lista-inimigos button:nth-child(5) { animation-delay: 0.20s; }
+#lista-personagens button:nth-child(n+6), #lista-inimigos button:nth-child(n+6) { animation-delay: 0.25s; }
+
+
+/* ----- Botões: sobem um pouquinho e brilham ----- */
+button {
+    transition:
+        background var(--rapido),
+        border-color var(--rapido),
+        color var(--rapido),
+        box-shadow var(--rapido),
+        transform var(--rapido);
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+}
+
+/* Botões principais (vermelhos) ganham brilho no hover */
+#confirmar-criacao:hover,
+#confirmar-inimigo:hover,
+#botao-proximo-turno:hover,
+#botao-criar-inimigo:hover,
+.botao-salvar:hover,
+.alternar-visivel.ativo:hover {
+    box-shadow: var(--brilho);
+}
+
+#botoes-header button:hover {
+    box-shadow: 0 0 14px rgba(var(--destaque-rgb), 0.3);
+}
+
+#lista-personagens button:hover,
+#lista-inimigos button:hover {
+    transform: translateX(4px);
+}
+
+
+/* ----- Painéis, menus e janelas ----- */
+#painel-personagem {
+    animation: deslizar-da-direita 0.35s var(--curva);
+}
+
+#painel-iniciativa {
+    animation: deslizar-da-esquerda 0.35s var(--curva);
+}
+
+#menu-contexto {
+    transform-origin: top left;
+    animation: zoom-aparecendo 0.16s var(--curva);
+}
+
+.janela-modal {
+    animation: aparecer 0.2s ease;
+}
+
+.janela-modal .caixa-inventario {
+    animation: zoom-aparecendo 0.35s var(--curva);
+}
+
+/* Itens de listas (inventário, perícias) aparecem subindo */
+.item-inventario {
+    animation: subir-aparecendo 0.25s var(--curva) both;
+}
+
+.item-iniciativa {
+    transition: background var(--suave), border-color var(--suave);
+}
+
+/* Quem está jogando: barra vermelha à esquerda e um pulso */
+.item-iniciativa.atual {
+    border-left: 4px solid var(--destaque);
+    animation: pulso-vermelho 1.8s ease-in-out infinite;
+}
+
+
+/* ----- Tokens ----- */
+/* "surgindo" é colocada pelo JS só quando o token é criado */
+.boneco.surgindo {
+    animation: token-surgir 0.45s var(--curva) both;
+}
+
+.boneco {
+    transition: filter var(--rapido);
+}
+
+.boneco.levou-dano {
+    animation:
+        tremer 0.45s ease,
+        clarao-dano 0.6s ease;
+}
+
+
+/* ----- Página inicial ----- */
+.inicio {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Fundo: textura de meio-tom (pontinhos) que vai sumindo nas bordas,
+   e uma mancha vermelha "respirando" atrás do título */
+.fundo-inicio {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background-image: radial-gradient(circle, rgba(237, 232, 223, 0.2) 1.2px, transparent 1.6px);
+    background-size: 7px 7px;
+
+    /* mask-image: onde o degradê é preto, aparece; onde é transparente, some */
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+    mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+}
+
+.fundo-inicio::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 900px;
+    height: 900px;
+    margin: -450px 0 0 -450px;
+
+    background: radial-gradient(circle, rgba(var(--destaque-rgb), 0.35) 0%, transparent 60%);
+    animation: luz-respirando 5s ease-in-out infinite;
+}
+
+/* Escurece as bordas da tela (efeito "vinheta") */
+.fundo-inicio::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+/* O selo é um "adesivo" levemente torto, colado na página */
+.selo-inicio {
+    rotate: -3deg;
+    animation: subir-aparecendo 0.6s var(--curva) 0.1s both;
+}
+
+.inicio .titulo-inicio {
+    animation: subir-aparecendo 0.8s var(--curva) 0.2s both;
+}
+
+.inicio .subtitulo-inicio {
+    animation: subir-aparecendo 0.7s var(--curva) 0.4s both;
+}
+
+.botao-iniciar {
+    animation: subir-aparecendo 0.7s var(--curva) 0.55s both;
+}
+
+
+/* ----- Visão dos jogadores ----- */
+#grupo-jogadores {
+    animation: deslizar-da-esquerda 0.5s var(--curva);
+}
+
+#inventarios-jogadores {
+    animation: deslizar-da-direita 0.5s var(--curva);
+}
+
+#fichas-jogadores {
+    animation: aparecer 0.35s ease;
+}
+
+/* Cartão do aliado treme e pisca em vermelho quando a vida cai */
+.cartao-aliado.levou-dano {
+    animation:
+        tremer 0.45s ease,
+        fundo-dano 0.9s ease;
+}
+
+#vez-jogadores.trocou {
+    animation: vez-trocou 0.5s var(--curva);
+}
+
+
+/* ----- Roda de atributos: raios girando bem devagar ----- */
+.raios-girando {
+    transform-origin: 300px 270px;
+    animation: girar 60s linear infinite;
+}
+
+
+/* ----- Detalhes gerais ----- */
+::selection {
+    background: var(--destaque);
+    color: #fff;
+}
+
+/* Barras de rolagem finas e escuras (Chrome/Edge) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--borda-forte);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--destaque);
+}
+
+/* No cabeçalho, a barra de rolagem é bem fininha */
+#botoes-header::-webkit-scrollbar {
+    height: 3px;
+}
+
+
+/* Quem configurou o computador para "reduzir movimento" não vê animações */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
