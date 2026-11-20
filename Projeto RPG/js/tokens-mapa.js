@@ -29,20 +29,28 @@ function abrirPainelPersonagem(id) {
     hpPersonagem.textContent = personagemSelecionado.hp;
     hpMaximoPersonagem.textContent = personagemSelecionado.hpMaximo;
 
-    // Inimigo: esconde a sanidade e pinta o painel de vermelho
-    blocoSanidade.style.display = ehInimigo ? "none" : "block";
+    // Inimigo: painel com a etiqueta vermelha "INIMIGO"
     painelPersonagem.classList.toggle("painel-inimigo", ehInimigo);
 
-    if (!ehInimigo) {
+    // A sanidade aparece para quem tem sanidade (aliado ou inimigo).
+    // Os inimigos criados no Painel do Mestre não têm, então ela some.
+    const temSanidade = personagemSelecionado.sanidadeMaxima > 0;
+    blocoSanidade.style.display = temSanidade ? "block" : "none";
+
+    if (temSanidade) {
         sanidadePersonagem.textContent = personagemSelecionado.sanidade;
         sanidadeMaximaPersonagem.textContent = personagemSelecionado.sanidadeMaxima;
     }
+
+    // Se estiver morrendo, mostra a contagem e os botões (morrendo.js)
+    atualizarBlocoMorrendo();
 
     painelPersonagem.style.display = "block";
 }
 
 botaoDano.addEventListener("click", function() {
     const valor = Number(valorHp.value);
+    const vidaAntes = personagemSelecionado.hp;
 
     personagemSelecionado.hp -= valor;
 
@@ -57,10 +65,20 @@ botaoDano.addEventListener("click", function() {
 
     if (valor > 0) {
         animarDano(personagensCriados[idSelecionado]);
+
+        // Chegou a 0 agora? Toca o som de morte no lugar do som de dano
+        if (vidaAntes > 0 && personagemSelecionado.hp <= 0) {
+            tocarSomMorte();
+        } else {
+            tocarSomDano();
+        }
     }
 
     // Inimigo com vida zerada fica "derrotado" no mapa
     atualizarEstadoToken(personagensCriados[idSelecionado], personagemSelecionado);
+
+    // Aliado que acabou de chegar a 0: abre a janela "morrendo"
+    verificarMorrendo(idSelecionado, vidaAntes);
 });
 
 // Faz o token tremer e piscar em vermelho.
@@ -74,10 +92,17 @@ function animarDano(elemento) {
     elemento.classList.remove("levou-dano");
     void elemento.offsetWidth;
     elemento.classList.add("levou-dano");
+
+    // Quando o tremor acaba, tira a classe. Assim outras animações
+    // do token (como o brilho de "morrendo") voltam a funcionar.
+    elemento.addEventListener("animationend", function() {
+        elemento.classList.remove("levou-dano");
+    }, { once: true });
 }
 
 botaoCura.addEventListener("click", function() {
     const valor = Number(valorHp.value);
+    const vidaAntes = personagemSelecionado.hp;
 
     personagemSelecionado.hp += valor;
 
@@ -90,8 +115,20 @@ botaoCura.addEventListener("click", function() {
 
     salvarPersonagemNoStorage(idSelecionado);
 
+    // Faíscas verdes subindo, com o quanto curou de verdade
+    // (se já estava com a vida cheia, não acontece nada)
+    const curou = personagemSelecionado.hp - vidaAntes;
+
+    if (curou > 0) {
+        efeitoCura(personagensCriados[idSelecionado], curou);
+    }
+
     // Curou um inimigo derrotado? Ele volta ao normal
     atualizarEstadoToken(personagensCriados[idSelecionado], personagemSelecionado);
+
+    // Curou quem estava morrendo? "Está de pé!"
+    verificarSalvamento(idSelecionado);
+    atualizarBlocoMorrendo();
 });
 
 botaoDanoSanidade.addEventListener("click", function() {
@@ -162,7 +199,7 @@ function criarPersonagem(id, letra, posicaoX, posicaoY, tipo, tamanho) {
     atualizarEstadoToken(boneco, personagens[id]);
 
     // Botão direito: abre o nosso menu em vez do menu do navegador.
-    // Para inimigos, o menu mostra só as condições (veja menu-contexto.js).
+    // Aliados e inimigos têm o mesmo menu (veja menu-contexto.js).
     boneco.addEventListener("contextmenu", function(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -179,7 +216,7 @@ function criarPersonagem(id, letra, posicaoX, posicaoY, tipo, tamanho) {
 
     tornarArrastavel(boneco);
 
-    // Clique: abre o painel de vida. Para inimigos, só a vida (sem sanidade).
+    // Clique: abre o painel de vida (a sanidade só aparece se o personagem tiver).
     boneco.addEventListener("click", function(event) {
         event.stopPropagation();
         abrirPainelPersonagem(id);

@@ -6,32 +6,25 @@ const menuContexto = document.getElementById("menu-contexto");
 const opcaoVidaVisivel = document.getElementById("opcao-vida-visivel");
 const condicoesMenu = document.getElementById("condicoes-menu");
 
-// Opções que só fazem sentido para aliados (inimigos não têm ficha etc.)
-const opcoesSoDeAliados = [
-    opcaoVidaVisivel,
-    document.getElementById("opcao-inventario"),
-    document.getElementById("opcao-ficha"),
-    document.getElementById("opcao-habilidades")
-];
-
 // Guarda em qual personagem o menu foi aberto
 let idDoMenu = null;
 
+// Aliados e inimigos têm as mesmas opções no menu.
 function abrirMenuContexto(id, x, y) {
     idDoMenu = id;
 
-    const ehInimigo = personagens[id].tipo === "inimigo";
+    const personagem = personagens[id];
 
-    // Para inimigos, esconde as opções de aliado: sobram só as condições
-    for (const opcao of opcoesSoDeAliados) {
-        opcao.hidden = ehInimigo;
-    }
+    // Quem não tem sanidade (como os inimigos do Painel do Mestre)
+    // mostra só a vida, então o texto muda um pouco.
+    const temSanidade = personagem.sanidadeMaxima > 0;
+    const oQueMostra = temSanidade ? "vida e sanidade" : "vida";
 
     // O texto da opção depende do estado atual: mostrar ou esconder
-    if (personagens[id].vidaVisivel) {
-        opcaoVidaVisivel.textContent = "🙈 Esconder vida e sanidade";
+    if (personagem.vidaVisivel) {
+        opcaoVidaVisivel.textContent = `🙈 Esconder ${oQueMostra}`;
     } else {
-        opcaoVidaVisivel.textContent = "👁️ Mostrar vida e sanidade aos jogadores";
+        opcaoVidaVisivel.textContent = `👁️ Mostrar ${oQueMostra} aos jogadores`;
     }
 
     desenharCondicoesDoMenu();

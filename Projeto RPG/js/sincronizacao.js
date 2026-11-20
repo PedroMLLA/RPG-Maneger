@@ -12,11 +12,21 @@ window.addEventListener("storage", function(event) {
 
     for (const id in personagensAtualizados) {
 
+        // Vida antes da atualização, para saber se o Mestre curou
+        const vidaAntes = personagens[id] ? personagens[id].hp : null;
+
         if (personagens[id]) {
 
             // Atualiza o MESMO objeto (em vez de criar outro),
             // assim o personagemSelecionado continua apontando para ele.
             Object.assign(personagens[id], personagensAtualizados[id]);
+
+            // Curado pelo Painel do Mestre: faíscas no token do mapa também
+            const curou = personagens[id].hp - vidaAntes;
+
+            if (curou > 0 && personagensCriados[id]) {
+                efeitoCura(personagensCriados[id], curou);
+            }
 
         } else {
 

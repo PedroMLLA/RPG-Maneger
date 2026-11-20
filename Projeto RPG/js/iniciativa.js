@@ -162,6 +162,9 @@ botaoProximoTurno.addEventListener("click", function() {
 
     atualizarIniciativa();
 
+    // Se agora é a vez de alguém que está morrendo, a contagem diminui
+    avancarMorrendo();
+
 });
 
 const botaoNovaBatalha = document.getElementById("botao-nova-batalha");
@@ -186,6 +189,10 @@ botaoNovaBatalha.addEventListener("click", function() {
         // A iniciativa vale só para uma batalha, então apagamos
         if (personagens[id]) {
             delete personagens[id].iniciativa;
+
+            // A contagem de "morrendo" também não passa para a próxima batalha
+            delete personagens[id].morrendo;
+
             salvarPersonagemNoStorage(id);
         }
     }

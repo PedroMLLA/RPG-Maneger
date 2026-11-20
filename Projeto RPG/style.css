@@ -661,6 +661,74 @@ header h1 .marca,
     border-color: var(--destaque);
 }
 
+/* Aba "Imagens": miniaturas em duas colunas */
+#botao-adicionar-imagem {
+    width: 100%;
+    margin-bottom: 8px;
+
+    background: transparent;
+    border-style: dashed;
+    color: var(--texto-suave);
+}
+
+#botao-adicionar-imagem:hover {
+    color: var(--destaque-forte);
+    border-color: var(--destaque);
+}
+
+#galeria-imagens {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.miniatura-imagem {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    cursor: grab;
+    transition: border-color var(--rapido), transform var(--rapido);
+}
+
+.miniatura-imagem:hover {
+    border-color: var(--destaque);
+    transform: translateY(-2px);
+}
+
+.miniatura-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.miniatura-imagem .excluir-imagem {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity var(--rapido);
+}
+
+.miniatura-imagem:hover .excluir-imagem {
+    opacity: 1;
+}
+
+#galeria-vazia {
+    margin: 0;
+    font-size: 13px;
+}
+
 #formulario-personagem {
     display: none;
     margin-top: 10px;
@@ -730,6 +798,65 @@ header h1 .marca,
         linear-gradient(to right, rgba(var(--destaque-rgb), 0.22) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(var(--destaque-rgb), 0.22) 1px, transparent 1px);
     background-size: 50px 50px;
+}
+
+
+/* Imagens do mestre soltas no mapa (por baixo dos tokens) */
+#imagens-mapa {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.imagem-solta {
+    position: absolute;
+    pointer-events: auto;
+    cursor: grab;
+    user-select: none;
+    animation: zoom-aparecendo 0.35s var(--curva);
+}
+
+.imagem-solta.mexendo {
+    cursor: grabbing;
+}
+
+/* "#conteudo-mapa" na frente: precisa ganhar da regra "#mapa img",
+   que estica a imagem do mapa. Aqui a altura segue a largura. */
+#conteudo-mapa .imagem-solta img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Na tela do mestre, uma borda aparece ao passar o mouse */
+#mapa .imagem-solta:hover img,
+#mapa .imagem-solta.mexendo img {
+    outline: 2px solid var(--destaque);
+    outline-offset: 2px;
+}
+
+/* Alça de redimensionar, no canto de baixo à direita */
+.alca-imagem {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+
+    background: var(--destaque);
+    border: 2px solid var(--texto);
+    border-radius: 50%;
+    cursor: nwse-resize;
+
+    opacity: 0;
+    transition: opacity var(--rapido);
+}
+
+.imagem-solta:hover .alca-imagem,
+.imagem-solta.mexendo .alca-imagem {
+    opacity: 1;
 }
 
 
@@ -868,6 +995,359 @@ header h1 .marca,
     border-radius: 50%;
 }
 
+/* ---------- Efeito de cura ---------- */
+/* Camada por cima do token, só para o efeito (não atrapalha cliques) */
+.efeito-cura {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Brilho verde redondo que acende e se espalha */
+.efeito-cura::before {
+    content: "";
+    position: absolute;
+    inset: -35%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124, 255, 178, 0.55) 0%, rgba(34, 197, 94, 0.25) 40%, transparent 68%);
+    animation: brilho-cura 1.3s ease-out forwards;
+}
+
+/* As faíscas. Os valores --tamanho, --atraso, --duracao e --desvio
+   são sorteados pelo JavaScript para cada uma. */
+.particula-cura {
+    position: absolute;
+    bottom: 15%;
+
+    font-size: var(--tamanho);
+    line-height: 1;
+    color: #a6ffcb;
+    text-shadow: 0 0 6px #22c55e, 0 0 14px #22c55e;
+
+    opacity: 0;
+    animation: particula-subir var(--duracao) ease-out var(--atraso) forwards;
+}
+
+/* O "+8" verde que sobe e some */
+.numero-cura {
+    position: absolute;
+    left: 50%;
+    top: -18px;
+    translate: -50% 0;
+
+    font-family: var(--fonte-titulo);
+    font-size: 24px;
+    color: #a6ffcb;
+    text-shadow: 2px 2px 0 #0b3d1f, 0 0 12px #22c55e;
+    white-space: nowrap;
+
+    animation: numero-subir 1.5s ease-out forwards;
+}
+
+@keyframes brilho-cura {
+    0%   { opacity: 0; transform: scale(0.5); }
+    30%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.3); }
+}
+
+@keyframes particula-subir {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.6) rotate(0deg); }
+    15%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--desvio), -90px) scale(1.1) rotate(120deg); }
+}
+
+@keyframes numero-subir {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.6); }
+    20%  { opacity: 1; transform: translateY(0) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-42px) scale(1); }
+}
+
+
+/* ---------- Morrendo / morto ---------- */
+/* Aliado morrendo: token pulsando em vermelho */
+.boneco.morrendo {
+    animation: brilho-morrendo 1.1s ease-in-out infinite;
+}
+
+@keyframes brilho-morrendo {
+    0%, 100% { filter: drop-shadow(0 0 3px rgba(var(--destaque-rgb), 0.6)); }
+    50%      { filter: drop-shadow(0 0 18px rgba(255, 40, 50, 1)); }
+}
+
+/* Contador "☠ 3" em cima do token */
+.contador-morrendo {
+    position: absolute;
+    left: 50%;
+    top: -14px;
+    translate: -50% 0;
+
+    padding: 1px 8px;
+
+    font-family: var(--fonte-titulo);
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    color: #ffffff;
+
+    background: var(--destaque);
+    border-radius: var(--pilula);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+/* Aliado morto: cinza, apagado e com caveira */
+.boneco.morto {
+    filter: grayscale(1) brightness(0.55);
+}
+
+.boneco.morto::before {
+    content: "💀";
+
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 30px;
+    filter: grayscale(0);
+}
+
+/* Bloco "morrendo" dentro do painel de vida */
+#bloco-morrendo {
+    display: none;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+
+    background: rgba(var(--destaque-rgb), 0.12);
+    border: 1px solid var(--destaque);
+    border-radius: var(--raio);
+}
+
+#bloco-morrendo .texto-morrendo {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--destaque-forte);
+}
+
+#bloco-morrendo .texto-morrendo span {
+    color: var(--texto) !important;
+}
+
+.acoes-morrendo {
+    display: flex;
+    gap: 6px;
+}
+
+.acoes-morrendo button {
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
+#botao-declarar-morte {
+    background: transparent;
+    color: var(--destaque-forte);
+    border-color: rgba(var(--destaque-rgb), 0.5);
+}
+
+/* Janela que abre quando um aliado cai */
+.caixa-morrendo {
+    width: min(420px, calc(100vw - 32px));
+    border-top-color: var(--destaque);
+    text-align: center;
+}
+
+#titulo-morrendo {
+    font-size: 34px;
+    color: var(--destaque-forte);
+    margin-bottom: 10px;
+}
+
+.texto-janela-morrendo {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--texto-suave);
+    margin-bottom: 16px;
+}
+
+.escolha-rodadas {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.botao-rodadas {
+    width: 46px;
+    font-family: var(--fonte-titulo);
+    font-size: 18px;
+}
+
+.botao-rodadas.ativo {
+    background: var(--destaque);
+    border-color: var(--destaque);
+    color: #ffffff;
+}
+
+.escolha-rodadas input {
+    width: 70px;
+    text-align: center;
+    font-family: var(--fonte-titulo);
+    font-size: 18px;
+}
+
+
+/* ---------- Anúncios (avisos grandes) ---------- */
+/* Escondido por padrão; a classe .visivel (posta pelo JS) faz aparecer */
+.anuncio {
+    position: fixed;
+    pointer-events: none;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s, visibility 0.6s;
+}
+
+.anuncio.visivel {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Visão dos jogadores: tela cheia */
+#anuncio-jogadores {
+    inset: 0;
+    z-index: 400;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+
+    padding: 40px;
+    text-align: center;
+}
+
+/* Fundo: escuro no meio e vermelho nas bordas, piscando */
+#anuncio-jogadores::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 25%, rgba(var(--destaque-rgb), 0.65) 100%);
+}
+
+#anuncio-jogadores.visivel::before {
+    animation: piscar-tela 0.9s ease-in-out infinite;
+}
+
+#anuncio-jogadores .anuncio-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: clamp(48px, 9vw, 140px);
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--papel);
+    text-shadow: 6px 6px 0 var(--destaque);
+}
+
+#anuncio-jogadores.visivel .anuncio-titulo {
+    animation: anuncio-entrar 0.6s var(--curva) both;
+}
+
+#anuncio-jogadores .anuncio-texto {
+    padding: 6px 18px;
+
+    font-size: clamp(18px, 2.4vw, 32px);
+    font-weight: 700;
+    color: var(--tinta);
+    background: var(--papel);
+    border-radius: 4px;
+    rotate: -1deg;
+}
+
+#anuncio-jogadores.visivel .anuncio-texto {
+    animation: anuncio-entrar 0.6s var(--curva) 0.15s both;
+}
+
+/* Contagem das rodadas: fundo mais leve, sem piscar tão forte */
+#anuncio-jogadores[data-tipo="rodada"]::before {
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(var(--destaque-rgb), 0.5) 100%);
+}
+
+/* Salvo: verde */
+#anuncio-jogadores[data-tipo="salvo"]::before {
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 25%, rgba(34, 197, 94, 0.55) 100%);
+    animation: none;
+}
+
+#anuncio-jogadores[data-tipo="salvo"] .anuncio-titulo {
+    text-shadow: 6px 6px 0 var(--vida);
+}
+
+/* Morreu: tudo escuro, sem cor */
+#anuncio-jogadores[data-tipo="morreu"]::before {
+    background: rgba(0, 0, 0, 0.88);
+    animation: none;
+}
+
+#anuncio-jogadores[data-tipo="morreu"] .anuncio-titulo {
+    color: #bdbdbd;
+    text-shadow: 6px 6px 0 #000;
+}
+
+@keyframes piscar-tela {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+@keyframes anuncio-entrar {
+    from { opacity: 0; transform: scale(1.35); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Tela do mestre: aviso pequeno (adesivo) embaixo do cabeçalho */
+#aviso-mestre {
+    top: calc(var(--altura-header) + 12px);
+    left: 50%;
+    translate: -50% 0;
+    z-index: 650;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    padding: 8px 18px;
+    text-align: center;
+
+    color: var(--tinta);
+    background: var(--papel);
+    border-radius: 6px;
+    box-shadow: 5px 5px 0 var(--destaque);
+}
+
+#aviso-mestre .anuncio-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 22px;
+    text-transform: uppercase;
+}
+
+#aviso-mestre .anuncio-texto {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#aviso-mestre[data-tipo="salvo"] {
+    box-shadow: 5px 5px 0 var(--vida);
+}
+
+#aviso-mestre[data-tipo="morreu"] {
+    box-shadow: 5px 5px 0 #000;
+}
+
+
 /* Painel de vida quando é de um inimigo: faixa vermelha no topo */
 #painel-personagem.painel-inimigo {
     border-top-color: var(--destaque);
@@ -886,7 +1366,8 @@ header h1 .marca,
 
 
 /* ---------- Menu do botão direito ---------- */
-#menu-contexto {
+#menu-contexto,
+#menu-imagem {
     position: fixed;
     z-index: 500;
     display: none;
@@ -900,7 +1381,8 @@ header h1 .marca,
     box-shadow: var(--sombra);
 }
 
-#menu-contexto button {
+#menu-contexto button,
+#menu-imagem button {
     display: block;
     width: 100%;
     text-align: left;
@@ -909,7 +1391,8 @@ header h1 .marca,
     border-color: transparent;
 }
 
-#menu-contexto button:hover {
+#menu-contexto button:hover,
+#menu-imagem button:hover {
     background: var(--superficie-clara);
     border-color: var(--destaque);
     color: var(--destaque-forte);
@@ -1172,6 +1655,123 @@ header h1 .marca,
 .adicionar-item #nome-item {
     flex: 1;
     min-width: 0;
+}
+
+/* ----- Carga (peso) do inventário ----- */
+#carga-inventario {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    transition: border-color var(--suave), background var(--suave);
+}
+
+.carga-topo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+#texto-carga {
+    flex: 1;
+    font-family: var(--fonte-titulo);
+    font-size: 20px;
+    white-space: nowrap;    /* "10,5 / 10 kg" nunca quebra de linha */
+}
+
+/* A janela do inventário fica um pouco mais larga por causa da coluna de peso */
+#janela-inventario .caixa-inventario {
+    width: min(500px, calc(100vw - 32px));
+}
+
+.carga-maxima {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--texto-suave);
+}
+
+.carga-maxima input {
+    width: 70px;
+    padding: 5px 8px;
+    text-align: center;
+}
+
+/* A barra usa o mesmo visual das barras de vida (.barra-fundo) */
+#carga-inventario .barra-fundo {
+    height: 8px;
+}
+
+#barra-carga {
+    background: linear-gradient(to right, #8a8a8a, var(--texto));
+    transition: width 0.3s ease, background var(--suave);
+}
+
+/* Passou do limite: borda e barra vermelhas + aviso */
+#carga-inventario.sobrecarregado {
+    border-color: var(--destaque);
+    background: rgba(var(--destaque-rgb), 0.1);
+}
+
+#carga-inventario.sobrecarregado #texto-carga {
+    color: var(--destaque-forte);
+}
+
+#carga-inventario.sobrecarregado #barra-carga {
+    background: var(--destaque);
+}
+
+#carga-inventario.sobrecarregado #texto-carga::after {
+    content: "Sobrecarregado";
+    margin-left: 8px;
+    padding: 2px 8px;
+    vertical-align: middle;
+
+    font-family: var(--fonte-texto);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--destaque);
+    border-radius: var(--pilula);
+}
+
+/* Nomes das colunas, alinhados com os campos de cada item */
+.cabecalho-inventario {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px 34px;
+    gap: 8px;
+    padding: 0 6px 6px 12px;
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto-apagado);
+}
+
+.cabecalho-inventario span:nth-child(2),
+.cabecalho-inventario span:nth-child(3) {
+    text-align: center;
+}
+
+/* Na visão dos jogadores: linha da carga no fim do cartão */
+.carga-jogadores {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--borda);
+
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-suave);
+}
+
+.carga-jogadores.sobrecarregado {
+    color: var(--destaque-forte);
 }
 
 /* Campos de número (quantidade, bônus) ficam estreitos */
@@ -1574,6 +2174,19 @@ body.visao-jogadores {
 }
 
 .cartao-aliado.da-vez h3 {
+    color: var(--destaque-forte);
+}
+
+/* Cartão de inimigo: etiqueta "INIMIGO" em cima do nome */
+.cartao-inimigo h3::before {
+    content: "Inimigo";
+    display: block;
+    margin-bottom: 2px;
+
+    font-family: var(--fonte-texto);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     color: var(--destaque-forte);
 }
 
@@ -2036,7 +2649,8 @@ button:active:not(:disabled) {
     animation: deslizar-da-esquerda 0.35s var(--curva);
 }
 
-#menu-contexto {
+#menu-contexto,
+#menu-imagem {
     transform-origin: top left;
     animation: zoom-aparecendo 0.16s var(--curva);
 }

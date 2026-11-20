@@ -26,6 +26,13 @@ const botaoAdicionarItem = document.getElementById("botao-adicionar-item");
 const botaoSalvarInventario = document.getElementById("botao-salvar-inventario");
 const botaoCancelarInventario = document.getElementById("botao-cancelar-inventario");
 
+// Peso / carga
+const pesoItem = document.getElementById("peso-item");
+const pesoMaximoInput = document.getElementById("peso-maximo");
+const textoCarga = document.getElementById("texto-carga");
+const barraCarga = document.getElementById("barra-carga");
+const cargaInventario = document.getElementById("carga-inventario");
+
 // De quem é o inventário aberto
 let idInventario = null;
 
@@ -48,6 +55,9 @@ function abrirInventario(id) {
 
     atualizarBotaoVisivel(alternarInventarioVisivel, personagens[id].inventarioVisivel);
 
+    // Peso máximo do personagem (vazio se ainda não foi definido)
+    pesoMaximoInput.value = personagens[id].pesoMaximo || "";
+
     desenharInventario();
 
     janelaInventario.style.display = "flex";
@@ -59,7 +69,31 @@ function fecharInventario() {
     idInventario = null;
     nomeItem.value = "";
     quantidadeItem.value = 1;
+    pesoItem.value = "";
 }
+
+// Recalcula a carga: "12,5 / 30 kg" e a barra.
+// Roda sempre que um item, quantidade, peso ou o máximo mudam.
+function atualizarCarga() {
+    const total = calcularPesoTotal(inventarioRascunho);
+    const maximo = Number(pesoMaximoInput.value) || 0;
+
+    if (maximo > 0) {
+        textoCarga.textContent = `${formatarPeso(total)} / ${formatarPeso(maximo)} kg`;
+
+        // Math.min: a barra para em 100%, mesmo se passar do limite
+        barraCarga.style.width = `${Math.min(100, (total / maximo) * 100)}%`;
+    } else {
+        // Sem máximo definido: mostra só o total
+        textoCarga.textContent = `${formatarPeso(total)} kg`;
+        barraCarga.style.width = "0%";
+    }
+
+    // Passou do limite: tudo fica vermelho e aparece "Sobrecarregado"
+    cargaInventario.classList.toggle("sobrecarregado", maximo > 0 && total > maximo);
+}
+
+pesoMaximoInput.addEventListener("input", atualizarCarga);
 
 // Redesenha a lista a partir do rascunho
 function desenharInventario() {
@@ -84,6 +118,21 @@ function desenharInventario() {
             // Nunca menos que 1: para tirar o item, use o ✕
             item.quantidade = Math.max(1, Number(quantidade.value) || 1);
             quantidade.value = item.quantidade;
+            atualizarCarga();
+        });
+
+        // Peso de UMA unidade do item
+        const peso = document.createElement("input");
+        peso.type = "number";
+        peso.min = 0;
+        peso.step = 0.1;
+        peso.value = item.peso || 0;
+        peso.title = "Peso de uma unidade (kg)";
+
+        // "input" (e não "change"): a carga muda enquanto você digita
+        peso.addEventListener("input", function() {
+            item.peso = Math.max(0, Number(peso.value) || 0);
+            atualizarCarga();
         });
 
         const remover = document.createElement("button");
@@ -97,12 +146,14 @@ function desenharInventario() {
             desenharInventario();
         });
 
-        linha.append(nome, quantidade, remover);
+        linha.append(nome, quantidade, peso, remover);
         listaInventario.appendChild(linha);
     });
 
     inventarioVazio.style.display =
         inventarioRascunho.length > 0 ? "none" : "block";
+
+    atualizarCarga();
 }
 
 function adicionarItem() {
@@ -114,11 +165,13 @@ function adicionarItem() {
 
     inventarioRascunho.push({
         nome: nome,
-        quantidade: Math.max(1, Number(quantidadeItem.value) || 1)
+        quantidade: Math.max(1, Number(quantidadeItem.value) || 1),
+        peso: Math.max(0, Number(pesoItem.value) || 0)   // vazio = 0 kg
     });
 
     nomeItem.value = "";
     quantidadeItem.value = 1;
+    pesoItem.value = "";
     nomeItem.focus();
 
     desenharInventario();
@@ -126,8 +179,14 @@ function adicionarItem() {
 
 botaoAdicionarItem.addEventListener("click", adicionarItem);
 
-// Apertar Enter no nome do item também adiciona
+// Apertar Enter no nome (ou no peso) do item também adiciona
 nomeItem.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        adicionarItem();
+    }
+});
+
+pesoItem.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
         adicionarItem();
     }
@@ -135,6 +194,9 @@ nomeItem.addEventListener("keydown", function(event) {
 
 botaoSalvarInventario.addEventListener("click", function() {
     personagens[idInventario].inventario = inventarioRascunho;
+
+    // O peso máximo também só é gravado no "Salvar" (0 = sem limite)
+    personagens[idInventario].pesoMaximo = Math.max(0, Number(pesoMaximoInput.value) || 0);
 
     // Salvar dispara o "storage" e a visão dos jogadores se atualiza
     salvarPersonagemNoStorage(idInventario);

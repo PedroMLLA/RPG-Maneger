@@ -6,7 +6,8 @@
 //  - personagens: fichas, inventários, habilidades, HP... (de todos)
 //  - estadoBatalha: quem está no mapa, posições e de quem é a vez
 //  - mapaPersonalizado: a imagem do mapa enviado (se houver)
-const CHAVES_JSON = ["personagens", "estadoBatalha"];
+//  - imagensMestre: as imagens da aba "Imagens" (e onde estão no mapa)
+const CHAVES_JSON = ["personagens", "estadoBatalha", "imagensMestre"];
 const CHAVE_MAPA = "mapaPersonalizado";
 
 // Serve para reconhecer que o arquivo é mesmo um backup nosso

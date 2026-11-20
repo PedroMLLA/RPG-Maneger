@@ -29,6 +29,8 @@ const CONDICOES = [
 
 // Atualiza o que muda durante a batalha num token já desenhado:
 //  - inimigo com vida zerada fica "derrotado" (escuro, com um X)
+//  - aliado morrendo ganha um contador vermelho pulsando (☠ 3)
+//  - aliado morto fica cinza, com uma caveira
 //  - os ícones das condições aparecem embaixo do token
 // Usada pela tela do mestre e pela visão dos jogadores.
 function atualizarEstadoToken(boneco, personagem) {
@@ -40,6 +42,24 @@ function atualizarEstadoToken(boneco, personagem) {
         "derrotado",
         personagem.tipo === "inimigo" && personagem.hp <= 0
     );
+
+    boneco.classList.toggle("morto", Boolean(personagem.morto));
+    boneco.classList.toggle("morrendo", Boolean(personagem.morrendo));
+
+    // Contador de rodadas de quem está morrendo
+    const contadorAntigo = boneco.querySelector(".contador-morrendo");
+
+    if (contadorAntigo) {
+        contadorAntigo.remove();
+    }
+
+    if (personagem.morrendo) {
+        const contador = document.createElement("div");
+        contador.classList.add("contador-morrendo");
+        contador.textContent = `☠ ${personagem.morrendo.rodadas}`;
+        contador.title = `Morrendo: ${personagem.morrendo.rodadas} rodada(s) para salvar`;
+        boneco.appendChild(contador);
+    }
 
     // Tira a faixa de ícones antiga (se houver) e monta de novo
     const faixaAntiga = boneco.querySelector(".condicoes-token");
@@ -74,6 +94,51 @@ function atualizarEstadoToken(boneco, personagem) {
     }
 
     boneco.appendChild(faixa);
+}
+
+
+// Efeito de cura: um brilho verde e "faíscas" que sobem do token.
+// "quantidade" é quanto curou (ex.: 8 mostra "+8"). Se vier vazio,
+// aparecem só as faíscas (a visão dos jogadores usa assim).
+function efeitoCura(boneco, quantidade) {
+    if (!boneco) {
+        return;
+    }
+
+    const efeito = document.createElement("div");
+    efeito.classList.add("efeito-cura");
+
+    const simbolos = ["✦", "✧", "+", "✦", "•"];
+
+    for (let i = 0; i < 14; i++) {
+        const particula = document.createElement("span");
+        particula.classList.add("particula-cura");
+        particula.textContent = simbolos[i % simbolos.length];
+
+        // Cada faísca sai de um lugar, com tamanho, tempo e desvio
+        // diferentes. Math.random() sorteia um número entre 0 e 1.
+        particula.style.left = `${10 + Math.random() * 80}%`;
+        particula.style.setProperty("--tamanho", `${10 + Math.random() * 12}px`);
+        particula.style.setProperty("--atraso", `${Math.random() * 0.5}s`);
+        particula.style.setProperty("--duracao", `${0.9 + Math.random() * 0.7}s`);
+        particula.style.setProperty("--desvio", `${(Math.random() - 0.5) * 40}px`);
+
+        efeito.appendChild(particula);
+    }
+
+    if (quantidade) {
+        const numero = document.createElement("span");
+        numero.classList.add("numero-cura");
+        numero.textContent = `+${quantidade}`;
+        efeito.appendChild(numero);
+    }
+
+    boneco.appendChild(efeito);
+
+    // Some sozinho quando as animações acabam
+    setTimeout(function() {
+        efeito.remove();
+    }, 2200);
 }
 
 

@@ -12,6 +12,10 @@ const fichasJogadores = document.getElementById("fichas-jogadores");
 // Lembra a vida de cada aliado no último desenho, para saber se caiu
 const ultimoHp = {};
 
+// Lembra a vida de cada TOKEN no último desenho, para saber se foi curado
+// (vale para todos, mesmo quem está com a vida escondida)
+const vidaDoTokenAntes = {};
+
 
 // Lê uma chave do localStorage já convertida de texto para objeto.
 // Se a chave não existir, devolve o "padrao".
@@ -81,6 +85,17 @@ function desenharTokens() {
         // Ícones de condição e inimigo derrotado (mesma função da tela do mestre)
         atualizarEstadoToken(boneco, personagem);
 
+        // Foi curado desde o último desenho? Faíscas verdes.
+        // Aqui não mostramos o "+8": quem tem a vida escondida
+        // não pode entregar quanto curou.
+        const vidaAntes = vidaDoTokenAntes[id];
+
+        if (vidaAntes !== undefined && personagem.hp > vidaAntes) {
+            efeitoCura(boneco, null);
+        }
+
+        vidaDoTokenAntes[id] = personagem.hp;
+
         boneco.style.left = `${posicao.x}px`;
         boneco.style.top = `${posicao.y}px`;
 
@@ -128,7 +143,8 @@ function desenharFichas(personagens, estado) {
     for (const id in estado.tokens) {
         const personagem = personagens[id];
 
-        if (!personagem || personagem.tipo === "inimigo" || !personagem.fichaVisivel) {
+        // Aliado ou inimigo: só aparece se o mestre liberou a ficha
+        if (!personagem || !personagem.fichaVisivel) {
             continue;
         }
 
@@ -175,14 +191,14 @@ function desenharFichas(personagens, estado) {
 }
 
 
-// Inventário dos aliados que estão no mapa, têm pelo menos um item
-// e que o mestre liberou para os jogadores verem.
+// Inventário de quem está no mapa (aliado ou inimigo), tem pelo menos
+// um item e que o mestre liberou para os jogadores verem.
 function desenharInventarios(personagens, estado) {
 
     for (const id in estado.tokens) {
         const personagem = personagens[id];
 
-        if (!personagem || personagem.tipo === "inimigo") {
+        if (!personagem) {
             continue;
         }
 
@@ -221,19 +237,40 @@ function desenharInventarios(personagens, estado) {
         }
 
         cartao.appendChild(lista);
+
+        // Linha da carga: "⚖ 12,5 / 30 kg" (vermelha se passou do limite)
+        const total = calcularPesoTotal(itens);
+        const maximo = personagem.pesoMaximo || 0;
+
+        if (total > 0 || maximo > 0) {
+            const carga = document.createElement("div");
+            carga.classList.add("carga-jogadores");
+
+            carga.textContent = maximo > 0
+                ? `⚖ ${formatarPeso(total)} / ${formatarPeso(maximo)} kg`
+                : `⚖ ${formatarPeso(total)} kg`;
+
+            if (maximo > 0 && total > maximo) {
+                carga.classList.add("sobrecarregado");
+                carga.textContent += " · Sobrecarregado";
+            }
+
+            cartao.appendChild(carga);
+        }
+
         inventariosJogadores.appendChild(cartao);
     }
 }
 
 
-// Habilidades dos aliados no mapa que o mestre liberou.
+// Habilidades de quem está no mapa (aliado ou inimigo) que o mestre liberou.
 // Ficam na mesma coluna da direita, abaixo dos inventários.
 function desenharHabilidades(personagens, estado) {
 
     for (const id in estado.tokens) {
         const personagem = personagens[id];
 
-        if (!personagem || personagem.tipo === "inimigo" || !personagem.habilidadesVisivel) {
+        if (!personagem || !personagem.habilidadesVisivel) {
             continue;
         }
 
@@ -312,25 +349,26 @@ function criarBarra(rotulo, atual, maximo, classe) {
 }
 
 
-// Painel com vida e sanidade dos ALIADOS que estão no mapa e que o
-// mestre liberou. Inimigos são pulados: a vida deles só o mestre vê.
+// Painel com vida e sanidade de quem está no mapa e que o mestre
+// liberou (aliados e inimigos). Por padrão, ninguém aparece.
 function desenharGrupo(personagens, estado) {
     grupoJogadores.innerHTML = "";
 
     for (const id in estado.tokens) {
         const personagem = personagens[id];
 
-        if (!personagem || personagem.tipo === "inimigo") {
-            continue;
-        }
-
         // Só aparece quem o mestre liberou (botão direito no token)
-        if (!personagem.vidaVisivel) {
+        if (!personagem || !personagem.vidaVisivel) {
             continue;
         }
 
         const cartao = document.createElement("div");
         cartao.classList.add("cartao-aliado");
+
+        // Inimigo ganha a etiqueta "INIMIGO" no cartão (veja o CSS)
+        if (personagem.tipo === "inimigo") {
+            cartao.classList.add("cartao-inimigo");
+        }
 
         // Quem está com a vida zerada aparece apagado
         if (personagem.hp <= 0) {
@@ -356,9 +394,12 @@ function desenharGrupo(personagens, estado) {
             criarBarra("Vida", personagem.hp, personagem.hpMaximo, "barra-vida")
         );
 
-        cartao.appendChild(
-            criarBarra("Sanidade", personagem.sanidade, personagem.sanidadeMaxima, "barra-sanidade")
-        );
+        // A barra de sanidade só aparece para quem tem sanidade
+        if (personagem.sanidadeMaxima > 0) {
+            cartao.appendChild(
+                criarBarra("Sanidade", personagem.sanidade, personagem.sanidadeMaxima, "barra-sanidade")
+            );
+        }
 
         grupoJogadores.appendChild(cartao);
     }
@@ -366,6 +407,46 @@ function desenharGrupo(personagens, estado) {
     // Sem aliados no mapa, o painel some
     grupoJogadores.style.display =
         grupoJogadores.children.length > 0 ? "flex" : "none";
+}
+
+
+// Imagens que o mestre arrastou da aba "Imagens" para o mapa.
+// Só as que acabaram de chegar fazem a animação de aparecer.
+const camadaImagens = document.getElementById("imagens-mapa");
+let idsImagensNaTela = [];
+
+function desenharImagens() {
+    const imagens = lerDoStorage("imagensMestre", []);
+    const idsAgora = [];
+
+    camadaImagens.innerHTML = "";
+
+    for (const imagem of imagens) {
+        if (!imagem.noMapa) {
+            continue;
+        }
+
+        const caixa = document.createElement("div");
+        caixa.classList.add("imagem-solta");
+        caixa.style.left = `${imagem.x}px`;
+        caixa.style.top = `${imagem.y}px`;
+        caixa.style.width = `${imagem.largura}px`;
+
+        // Já estava na tela? Sem animação (senão ela "pularia" a cada movimento)
+        if (idsImagensNaTela.includes(imagem.id)) {
+            caixa.style.animation = "none";
+        }
+
+        const foto = document.createElement("img");
+        foto.src = imagem.src;
+        foto.alt = imagem.nome;
+        caixa.appendChild(foto);
+
+        camadaImagens.appendChild(caixa);
+        idsAgora.push(imagem.id);
+    }
+
+    idsImagensNaTela = idsAgora;
 }
 
 
@@ -386,8 +467,21 @@ window.addEventListener("storage", function(event) {
     if (event.key === "mapaPersonalizado") {
         carregarMapa();
     }
+
+    if (event.key === "imagensMestre") {
+        desenharImagens();
+    }
+
+    // Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia
+    if (event.key === "anuncio" && event.newValue) {
+        exibirAnuncio(
+            document.getElementById("anuncio-jogadores"),
+            JSON.parse(event.newValue)
+        );
+    }
 });
 
 
 carregarMapa();
 desenharTokens();
+desenharImagens();

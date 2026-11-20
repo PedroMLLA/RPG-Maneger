@@ -124,12 +124,22 @@ function atualizarInimigos() {
         botaoDano.addEventListener("click", function() {
 
             const valor = Number(inputDano.value);
+            const vidaAntes = personagem.hp;
 
             personagem.hp -= valor;
 
 
             if (personagem.hp < 0) {
                 personagem.hp = 0;
+            }
+
+            if (valor > 0) {
+                // Chegou a 0 agora? Som de morte no lugar do som de dano
+                if (vidaAntes > 0 && personagem.hp <= 0) {
+                    tocarSomMorte();
+                } else {
+                    tocarSomDano();
+                }
             }
 
 
