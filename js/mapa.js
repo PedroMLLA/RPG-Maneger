@@ -18,6 +18,14 @@ botaoMenu.addEventListener("click", function() {
     barraLateral.classList.toggle("fechada");
 });
 
+// Tela de celular: a barra lateral cobriria o mapa, então começa fechada
+// (o ☰ abre). É a mesma regra de largura do CSS (max-width: 760px).
+const TELA_PEQUENA = window.matchMedia("(max-width: 760px)").matches;
+
+if (TELA_PEQUENA) {
+    barraLateral.classList.add("fechada");
+}
+
 botaoModoMestre.addEventListener("click", function() {
     window.open("mestre.html", "painelMestre", "width=400,height=600");
 });
@@ -145,7 +153,18 @@ mapa.addEventListener("wheel", function(event) {
 
 // Apertar o mouse no mapa: começa a medir (se a régua estiver ligada)
 // ou começa a arrastar o mapa.
-mapa.addEventListener("mousedown", function(event) {
+// Dedos encostados no mapa agora (id -> posição). Com dois, é zoom.
+const dedosNoMapa = new Map();
+
+mapa.addEventListener("pointerdown", function(event) {
+    dedosNoMapa.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    // Segundo dedo: para de arrastar e começa o zoom de pinça
+    if (dedosNoMapa.size === 2) {
+        arrastando = false;
+        return;
+    }
+
     if (modoRegua) {
         comecarMedicao(event);
         return;
@@ -156,7 +175,23 @@ mapa.addEventListener("mousedown", function(event) {
     mouseY = event.clientY;
 });
 
-document.addEventListener("mousemove", function(event) {
+function distanciaDosDedos() {
+    const [a, b] = [...dedosNoMapa.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+document.addEventListener("pointermove", function(event) {
+
+    // Pinça com dois dedos: dedos se afastando = zoom maior
+    if (dedosNoMapa.size === 2 && dedosNoMapa.has(event.pointerId)) {
+        const antes = distanciaDosDedos();
+        dedosNoMapa.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        const agora = distanciaDosDedos();
+
+        escala = Math.min(3, Math.max(0.5, escala * (agora / antes)));
+        atualizarMapa();
+        return;
+    }
 
     if (medindo) {
         continuarMedicao(event);
@@ -179,11 +214,72 @@ document.addEventListener("mousemove", function(event) {
     atualizarMapa();
 });
 
-document.addEventListener("mouseup", function() {
+function soltarPonteiro(event) {
+    dedosNoMapa.delete(event.pointerId);
 
     if (medindo) {
         terminarMedicao();
     }
 
     arrastando = false;
+}
+
+document.addEventListener("pointerup", soltarPonteiro);
+// pointercancel: o celular "roubou" o toque (ex.: chegou uma notificação)
+document.addEventListener("pointercancel", soltarPonteiro);
+
+
+// ----- Celular: segurar o dedo = botão direito -----
+// O Android já faz isso sozinho; o iPhone não. Depois de 600 ms com o
+// dedo parado, mandamos um "contextmenu" para o que está embaixo do dedo
+// (token ou imagem), e o menu de sempre abre.
+let toqueLongo = null;
+
+document.addEventListener("pointerdown", function(event) {
+    if (event.pointerType !== "touch") {
+        return;
+    }
+
+    const alvo = event.target;
+    const inicio = { x: event.clientX, y: event.clientY };
+
+    toqueLongo = {
+        inicio,
+        menuJaAbriu: false,
+        relogio: setTimeout(function() {
+            // O próprio celular já abriu o menu (Android)? Não abre de novo.
+            if (toqueLongo && !toqueLongo.menuJaAbriu) {
+                alvo.dispatchEvent(new MouseEvent("contextmenu", {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: inicio.x,
+                    clientY: inicio.y
+                }));
+            }
+            toqueLongo = null;
+        }, 600)
+    };
+}, true); // true = captura: roda antes do token, que para o evento (stopPropagation)
+
+document.addEventListener("pointermove", function(event) {
+    // Mexeu o dedo mais de 10px: era um arraste, não um "segurar"
+    if (toqueLongo && Math.hypot(event.clientX - toqueLongo.inicio.x, event.clientY - toqueLongo.inicio.y) > 10) {
+        cancelarToqueLongo();
+    }
 });
+
+function cancelarToqueLongo() {
+    if (toqueLongo) {
+        clearTimeout(toqueLongo.relogio);
+        toqueLongo = null;
+    }
+}
+
+document.addEventListener("pointerup", cancelarToqueLongo);
+document.addEventListener("pointercancel", cancelarToqueLongo);
+
+document.addEventListener("contextmenu", function() {
+    if (toqueLongo) {
+        toqueLongo.menuJaAbriu = true;
+    }
+}, true);

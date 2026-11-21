@@ -19,7 +19,10 @@ const textoImagemCampanha = document.getElementById("texto-imagem-campanha");
 const botaoCancelarCampanha = document.getElementById("botao-cancelar-campanha");
 const botaoCriarCampanha = document.getElementById("botao-criar-campanha");
 
-const TEXTO_PADRAO = "Passe o mouse em uma campanha";
+// "(hover: none)": aparelho sem mouse (celular, tablet). Lá não dá
+// para "passar o mouse", então o texto muda.
+const SEM_MOUSE = window.matchMedia("(hover: none)").matches;
+const TEXTO_PADRAO = SEM_MOUSE ? "Toque em uma campanha" : "Passe o mouse em uma campanha";
 const TAMANHO_CAMPANHA = 130; // largura de cada círculo, igual ao CSS
 
 // Na primeira vez, já vêm duas campanhas com os mapas do projeto
@@ -175,6 +178,10 @@ function desenharRoda() {
     const tamanho = raio * 2 + TAMANHO_CAMPANHA;
 
     rodaCampanhas.style.setProperty("--tamanho-roda", `${tamanho}px`);
+
+    // Que fração da roda cada círculo ocupa. O CSS usa isso para os
+    // círculos encolherem junto com a roda (no celular ela fica menor).
+    rodaCampanhas.style.setProperty("--parte", TAMANHO_CAMPANHA / tamanho);
 
     campanhas.forEach(function(campanha, indice) {
 

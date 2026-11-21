@@ -29,10 +29,21 @@ function abrirMenuContexto(id, x, y) {
 
     desenharCondicoesDoMenu();
 
-    // Abre o menu exatamente onde o mouse está
-    menuContexto.style.left = `${x}px`;
-    menuContexto.style.top = `${y}px`;
+    // Abre o menu onde o mouse (ou o dedo) está
     menuContexto.style.display = "block";
+    posicionarNaTela(menuContexto, x, y);
+}
+
+// Põe o menu no ponto (x, y), mas empurra para dentro se ele fosse
+// sair da tela (acontece muito no celular, que é estreito).
+// Usado também pelo menu das imagens (galeria.js).
+function posicionarNaTela(menu, x, y) {
+    const margem = 8;
+    const maxX = window.innerWidth - menu.offsetWidth - margem;
+    const maxY = window.innerHeight - menu.offsetHeight - margem;
+
+    menu.style.left = `${Math.max(margem, Math.min(x, maxX))}px`;
+    menu.style.top = `${Math.max(margem, Math.min(y, maxY))}px`;
 }
 
 function fecharMenuContexto() {
@@ -130,7 +141,7 @@ function alternarVisibilidade(id, propriedade, botao) {
 // Clicar em qualquer lugar fora do menu fecha ele.
 // O "true" no fim faz este código rodar ANTES dos outros cliques,
 // então funciona mesmo se o clique for num token.
-document.addEventListener("mousedown", function(event) {
+document.addEventListener("pointerdown", function(event) {
     if (!menuContexto.contains(event.target)) {
         fecharMenuContexto();
     }

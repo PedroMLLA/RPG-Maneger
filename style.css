@@ -196,6 +196,16 @@ textarea {
     border-radius: var(--raio);
 }
 
+/* iPhone: campo com letra menor que 16px faz a página dar zoom sozinha
+   ao tocar nele. Em aparelhos de toque, os campos ficam com 16px. */
+@media (hover: none) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
 textarea:focus,
 input:focus,
 select:focus,
@@ -365,6 +375,27 @@ header h1 .marca,
 @media (max-width: 760px) {
     header h1 {
         display: none;
+    }
+
+    header {
+        gap: 8px;
+        padding: 0 10px;
+    }
+
+    /* O nome da campanha já aparece na roda; aqui só ocuparia espaço */
+    header .campanha-atual-header {
+        display: none;
+    }
+
+    /* "min-width: 0" deixa a fila de botões encolher e rolar para o
+       lado; sem isso, um item flex nunca fica menor que o conteúdo */
+    #botoes-header {
+        min-width: 0;
+    }
+
+    .botao-voltar {
+        padding: 6px 10px;
+        font-size: 13px;
     }
 }
 
@@ -1957,6 +1988,67 @@ input.valor-atributo {
     width: 260px;
 }
 
+/* ----- Mapa do mestre no celular ----- */
+/* O mapa aceita arrastar e zoom com os dedos (mapa.js), então o
+   celular não deve rolar nem dar zoom na página quando o dedo está nele.
+   "touch-callout: none": o iPhone não abre o menu dele ao segurar o dedo. */
+#mapa {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+@media (max-width: 760px) {
+    /* A barra lateral passa POR CIMA do mapa, em vez de empurrá-lo */
+    #barra-lateral {
+        width: min(300px, 85vw);
+        z-index: 250;
+        box-shadow: var(--sombra);
+    }
+
+    #area-mapa,
+    #barra-lateral:not(.fechada) ~ #area-mapa {
+        padding: calc(var(--altura-header) + 8px) 8px 8px;
+    }
+
+    #area-mapa > h2 {
+        display: none;
+    }
+
+    /* Ferramentas: menores, e roláveis para o lado se não couberem */
+    #ferramentas-mapa {
+        bottom: 10px;
+        max-width: calc(100% - 16px);
+        overflow-x: auto;
+    }
+
+    #ferramentas-mapa button {
+        padding: 8px 12px;
+    }
+
+    /* Painéis do personagem e da iniciativa: largura quase toda */
+    #painel-personagem,
+    #painel-iniciativa {
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        width: auto;
+        max-height: calc(100% - 80px);
+        overflow-y: auto;
+    }
+}
+
+/* Sem mouse: a alça de redimensionar fica sempre visível e maior */
+@media (hover: none) {
+    .alca-imagem {
+        width: 26px;
+        height: 26px;
+        right: -13px;
+        bottom: -13px;
+        opacity: 1;
+    }
+}
+
 #painel-personagem h2,
 #painel-iniciativa h2 {
     font-size: 18px;
@@ -2409,6 +2501,102 @@ body.visao-jogadores {
 .bonus-pericia {
     font-weight: 700;
     color: var(--destaque-forte);
+}
+
+
+/* O mapa dos jogadores aceita zoom e arraste com os dedos (jogador.js):
+   "touch-action: none" impede o celular de dar o zoom dele na página toda */
+#mapa-jogadores {
+    touch-action: none;
+}
+
+/* Botões "Grupo" e "Itens": só existem no celular (veja abaixo) */
+#botoes-paineis {
+    display: none;
+}
+
+/* ----- Visão dos jogadores no celular ----- */
+@media (max-width: 760px) {
+
+    #vez-jogadores {
+        top: 12px;
+        max-width: calc(100vw - 32px);
+        padding: 4px 14px 2px;
+        font-size: 20px;
+        text-align: center;
+        box-shadow: 4px 4px 0 var(--destaque);
+    }
+
+    /* Botões no rodapé, lado a lado */
+    #botoes-paineis {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 16px;
+        z-index: 60;
+
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        pointer-events: none;      /* só os botões recebem o toque */
+    }
+
+    .botao-painel {
+        pointer-events: auto;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 700;
+        background: rgba(var(--painel-rgb), 0.92);
+        border: 1px solid var(--borda-forte);
+        border-radius: var(--pilula);
+        box-shadow: var(--sombra);
+        color: var(--texto);
+    }
+
+    .botao-painel[hidden] {
+        display: none;
+    }
+
+    /* Botão do painel aberto fica vermelho */
+    .abrir-grupo [data-painel="grupo"],
+    .abrir-itens [data-painel="itens"] {
+        background: var(--destaque);
+        border-color: var(--destaque);
+        color: #fff;
+    }
+
+    /* Os dois painéis viram uma "gaveta" que sobe do rodapé.
+       Fechados por padrão: o "!important" ganha do display que o JS põe. */
+    #grupo-jogadores,
+    #inventarios-jogadores {
+        top: auto;
+        left: 12px;
+        right: 12px;
+        bottom: 76px;              /* acima dos botões */
+        width: auto;
+        max-height: 55vh;
+        z-index: 55;
+    }
+
+    .visao-jogadores:not(.abrir-grupo) #grupo-jogadores,
+    .visao-jogadores:not(.abrir-itens) #inventarios-jogadores {
+        display: none !important;
+    }
+
+    /* Fichas: ocupam a largura toda (no PC sobra espaço nas laterais) */
+    #fichas-jogadores {
+        align-items: flex-start;
+        padding: 64px 12px 90px;
+        gap: 14px;
+    }
+
+    .cartao-ficha .valor-atributo {
+        font-size: 26px;
+    }
+
+    #anuncio-jogadores {
+        padding: 20px;
+    }
 }
 
 
@@ -2874,7 +3062,8 @@ button:active:not(:disabled) {
 /* Anel tracejado que gira devagar atrás das campanhas */
 .anel-roda {
     position: absolute;
-    inset: 65px;
+    /* Passa pelo centro dos círculos: meio círculo para dentro da borda */
+    inset: calc(var(--parte, 0.25) * 50%);
     border: 2px dashed rgba(var(--destaque-rgb), 0.45);
     border-radius: 50%;
     pointer-events: none;
@@ -2887,8 +3076,8 @@ button:active:not(:disabled) {
     left: 50%;
     top: 50%;
     translate: -50% -50%;
-    width: 150px;
-    height: 150px;
+    width: min(150px, 34%);
+    height: min(150px, 34%);
     padding: 0;
 
     display: flex;
@@ -2920,8 +3109,9 @@ button:active:not(:disabled) {
 /* Cada campanha: um círculo com a imagem e o nome embaixo */
 .campanha-roda {
     position: absolute;
-    width: 130px;
-    height: 130px;
+    /* Fração da roda (o JS calcula): no PC dá 130px, no celular encolhe */
+    width: calc(var(--parte, 0.25) * 100%);
+    height: calc(var(--parte, 0.25) * 100%);
     padding: 0;
     z-index: 1;
 
@@ -3037,6 +3227,55 @@ button:active:not(:disabled) {
     letter-spacing: 0.02em;
     color: var(--texto-suave);
     text-transform: uppercase;
+    text-align: center;
+}
+
+/* Celular / tablet (sem mouse): não existe "passar o mouse", então
+   o nome de cada campanha fica sempre à mostra, e o × também */
+@media (hover: none) {
+    .campanha-roda .nome-campanha {
+        opacity: 1;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 11px;
+    }
+
+    .campanha-roda .excluir-campanha {
+        opacity: 0.85;
+    }
+
+    /* Sem o crescer do hover (no toque ele "gruda" depois de tocar) */
+    .campanha-roda:hover {
+        scale: 1;
+    }
+
+    #roda-campanhas:has(.campanha-roda:hover) .campanha-roda:not(:hover) {
+        opacity: 1;
+        filter: none;
+    }
+}
+
+@media (max-width: 760px) {
+    #roda-campanhas {
+        min-width: 0;
+    }
+
+    .foto-campanha {
+        font-size: 32px;
+    }
+
+    #botao-nova-campanha {
+        font-size: 12px;
+    }
+
+    #botao-nova-campanha .mais {
+        font-size: 32px;
+    }
+
+    #nome-em-destaque {
+        font-size: 20px;
+    }
 }
 
 /* Janela de nova campanha */

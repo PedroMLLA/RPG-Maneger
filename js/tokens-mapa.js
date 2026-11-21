@@ -262,7 +262,7 @@ function tornarArrastavel(boneco) {
     let mouseXBoneco = 0;
     let mouseYBoneco = 0;
 
-    boneco.addEventListener("mousedown", function(event) {
+    boneco.addEventListener("pointerdown", function(event) {
         // Impede o mapa de começar a ser arrastado junto
         event.stopPropagation();
 
@@ -277,7 +277,7 @@ function tornarArrastavel(boneco) {
         mouseYBoneco = event.clientY;
     });
 
-    document.addEventListener("mousemove", function(event) {
+    document.addEventListener("pointermove", function(event) {
         if (!arrastandoBoneco) {
             return;
         }
@@ -297,7 +297,7 @@ function tornarArrastavel(boneco) {
         mouseYBoneco = event.clientY;
     });
 
-    document.addEventListener("mouseup", function() {
+    document.addEventListener("pointerup", function() {
         // Só salva se ESTE token estava sendo arrastado
         if (arrastandoBoneco) {
             arrastandoBoneco = false;

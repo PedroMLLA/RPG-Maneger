@@ -35,17 +35,130 @@ function ajustarNaTela() {
         return;
     }
 
-    const escala = Math.min(
+    const escalaQueCabe = Math.min(
         window.innerWidth / largura,
         window.innerHeight / altura
     );
 
-    const sobraX = (window.innerWidth - largura * escala) / 2;
-    const sobraY = (window.innerHeight - altura * escala) / 2;
+    // O zoom que o jogador deu com os dedos multiplica o "cabe na tela"
+    const escala = escalaQueCabe * zoom.fator;
+
+    // Não deixa arrastar o mapa para fora da tela: no máximo até a borda
+    const limiteX = Math.max(0, (largura * escala - window.innerWidth) / 2);
+    const limiteY = Math.max(0, (altura * escala - window.innerHeight) / 2);
+    zoom.x = Math.min(limiteX, Math.max(-limiteX, zoom.x));
+    zoom.y = Math.min(limiteY, Math.max(-limiteY, zoom.y));
+
+    const sobraX = (window.innerWidth - largura * escala) / 2 + zoom.x;
+    const sobraY = (window.innerHeight - altura * escala) / 2 + zoom.y;
 
     conteudoMapa.style.transform =
         `translate(${sobraX}px, ${sobraY}px) scale(${escala})`;
 }
+
+
+// ----- Zoom e arraste do mapa (celular: dedos; PC: rodinha do mouse) -----
+// fator 1 = mapa inteiro na tela. x/y = quanto o mapa foi arrastado.
+const zoom = { fator: 1, x: 0, y: 0 };
+const ZOOM_MAXIMO = 5;
+
+// Dedos (ou mouse) encostados agora: id -> posição
+const dedos = new Map();
+let ultimoToque = 0;
+
+// Muda o zoom mantendo parado o ponto (cx, cy) da tela, tipo o
+// lugar entre os dois dedos. Assim o mapa cresce "em volta" dele.
+function mudarZoom(novoFator, cx, cy) {
+    novoFator = Math.min(ZOOM_MAXIMO, Math.max(1, novoFator));
+
+    // Distância do ponto até o centro da tela, já com o arraste
+    const centroX = window.innerWidth / 2 + zoom.x;
+    const centroY = window.innerHeight / 2 + zoom.y;
+    const proporcao = novoFator / zoom.fator;
+
+    zoom.x += (cx - centroX) * (1 - proporcao);
+    zoom.y += (cy - centroY) * (1 - proporcao);
+    zoom.fator = novoFator;
+
+    // Voltou para o tamanho normal: centraliza de novo
+    if (zoom.fator === 1) {
+        zoom.x = 0;
+        zoom.y = 0;
+    }
+
+    ajustarNaTela();
+}
+
+function distanciaEntreDedos() {
+    const [a, b] = [...dedos.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+const telaMapa = document.getElementById("mapa-jogadores");
+
+telaMapa.addEventListener("pointerdown", function(evento) {
+    // Toque num painel (vida, itens, ficha, botões) não mexe no mapa
+    if (evento.target.closest("aside, nav, #fichas-jogadores")) {
+        return;
+    }
+
+    // Dois toques rápidos: volta o mapa inteiro para a tela
+    const agora = Date.now();
+    if (dedos.size === 0 && agora - ultimoToque < 300) {
+        mudarZoom(1, 0, 0);
+    }
+    ultimoToque = agora;
+
+    dedos.set(evento.pointerId, { x: evento.clientX, y: evento.clientY });
+});
+
+telaMapa.addEventListener("pointermove", function(evento) {
+    const antes = dedos.get(evento.pointerId);
+
+    if (!antes) {
+        return;
+    }
+
+    if (dedos.size === 1) {
+        // Um dedo: arrasta (só faz sentido com zoom)
+        if (zoom.fator > 1) {
+            zoom.x += evento.clientX - antes.x;
+            zoom.y += evento.clientY - antes.y;
+            ajustarNaTela();
+        }
+        dedos.set(evento.pointerId, { x: evento.clientX, y: evento.clientY });
+        return;
+    }
+
+    // Dois dedos: a mudança na distância entre eles vira zoom
+    const distanciaAntes = distanciaEntreDedos();
+    dedos.set(evento.pointerId, { x: evento.clientX, y: evento.clientY });
+    const distanciaAgora = distanciaEntreDedos();
+
+    const [a, b] = [...dedos.values()];
+    mudarZoom(
+        zoom.fator * (distanciaAgora / distanciaAntes),
+        (a.x + b.x) / 2,
+        (a.y + b.y) / 2
+    );
+});
+
+function soltarDedo(evento) {
+    dedos.delete(evento.pointerId);
+}
+
+telaMapa.addEventListener("pointerup", soltarDedo);
+telaMapa.addEventListener("pointercancel", soltarDedo);
+
+// PC: rodinha do mouse dá zoom onde o mouse está
+telaMapa.addEventListener("wheel", function(evento) {
+    if (evento.target.closest("aside, nav, #fichas-jogadores")) {
+        return;
+    }
+
+    evento.preventDefault();
+    mudarZoom(zoom.fator * (evento.deltaY < 0 ? 1.15 : 1 / 1.15), evento.clientX, evento.clientY);
+}, { passive: false });
 
 
 // Apaga os tokens e desenha de novo, a partir do estado salvo.
@@ -126,6 +239,37 @@ function desenharTokens() {
     inventariosJogadores.style.display =
         inventariosJogadores.children.length > 0 ? "flex" : "none";
     desenharFichas(personagens, estado);
+    atualizarBotoesPaineis();
+}
+
+
+// ----- Celular: botões "Grupo" e "Itens" que abrem uma gaveta -----
+// Cada botão só aparece se o painel dele tem alguma coisa.
+const botaoGrupo = document.querySelector('[data-painel="grupo"]');
+const botaoItens = document.querySelector('[data-painel="itens"]');
+
+function atualizarBotoesPaineis() {
+    botaoGrupo.hidden = grupoJogadores.children.length === 0;
+    botaoItens.hidden = inventariosJogadores.children.length === 0;
+
+    // Painel que ficou vazio fecha sozinho
+    if (botaoGrupo.hidden) document.body.classList.remove("abrir-grupo");
+    if (botaoItens.hidden) document.body.classList.remove("abrir-itens");
+}
+
+// Abre o painel do botão tocado; tocar de novo fecha.
+// Só um aberto por vez, para não cobrir o mapa inteiro.
+for (const botao of [botaoGrupo, botaoItens]) {
+    botao.addEventListener("click", function() {
+        const classe = `abrir-${botao.dataset.painel}`;
+        const jaAberto = document.body.classList.contains(classe);
+
+        document.body.classList.remove("abrir-grupo", "abrir-itens");
+
+        if (!jaAberto) {
+            document.body.classList.add(classe);
+        }
+    });
 }
 
 

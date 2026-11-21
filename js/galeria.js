@@ -78,6 +78,17 @@ function desenharGaleria() {
             event.dataTransfer.effectAllowed = "move";
         });
 
+        // Clicar/tocar na miniatura: põe no meio do que aparece do mapa.
+        // (No celular não existe arrastar e soltar, então é assim que funciona lá.)
+        miniatura.addEventListener("click", function(event) {
+            if (event.target === excluir) {
+                return;
+            }
+
+            const tela = mapa.getBoundingClientRect();
+            colocarNoMapa(imagem, tela.left + tela.width / 2, tela.top + tela.height / 2);
+        });
+
         // × para excluir de vez
         const excluir = document.createElement("button");
         excluir.classList.add("excluir-imagem");
@@ -156,11 +167,16 @@ mapa.addEventListener("drop", function(event) {
         return;
     }
 
+    colocarNoMapa(imagem, event.clientX, event.clientY);
+});
+
+// Põe a imagem no mapa, centralizada no ponto (telaX, telaY) da tela.
+function colocarNoMapa(imagem, telaX, telaY) {
     // Onde soltou, em pixels do mapa. O retângulo do conteúdo já vem
     // com o zoom e o arrasto aplicados; dividir por escala desfaz o zoom.
     const caixa = conteudoMapa.getBoundingClientRect();
-    const pontoX = (event.clientX - caixa.left) / escala;
-    const pontoY = (event.clientY - caixa.top) / escala;
+    const pontoX = (telaX - caixa.left) / escala;
+    const pontoY = (telaY - caixa.top) / escala;
 
     // Centraliza a imagem no ponto onde o mouse soltou
     const proporcao = imagem.proporcao || 1;
@@ -173,7 +189,12 @@ mapa.addEventListener("drop", function(event) {
     salvarImagens();
     desenharGaleria();
     desenharImagensNoMapa();
-});
+
+    // No celular a barra lateral cobre o mapa: fecha para ver a imagem
+    if (TELA_PEQUENA) {
+        barraLateral.classList.add("fechada");
+    }
+}
 
 
 // ----- Imagens no mapa -----
@@ -240,15 +261,15 @@ function tornarImagemArrastavel(caixa, alca, imagem) {
         caixa.classList.add("mexendo");
     }
 
-    caixa.addEventListener("mousedown", function(event) {
+    caixa.addEventListener("pointerdown", function(event) {
         comecar(event, "mover");
     });
 
-    alca.addEventListener("mousedown", function(event) {
+    alca.addEventListener("pointerdown", function(event) {
         comecar(event, "redimensionar");
     });
 
-    document.addEventListener("mousemove", function(event) {
+    document.addEventListener("pointermove", function(event) {
         if (!modo) {
             return;
         }
@@ -271,7 +292,7 @@ function tornarImagemArrastavel(caixa, alca, imagem) {
         }
     });
 
-    document.addEventListener("mouseup", function() {
+    document.addEventListener("pointerup", function() {
         if (!modo) {
             return;
         }
@@ -292,9 +313,8 @@ function abrirMenuImagem(id, x, y) {
     fecharMenuContexto();
 
     idImagemDoMenu = id;
-    menuImagem.style.left = `${x}px`;
-    menuImagem.style.top = `${y}px`;
     menuImagem.style.display = "block";
+    posicionarNaTela(menuImagem, x, y);
 }
 
 function fecharMenuImagem() {
@@ -315,7 +335,7 @@ opcaoTirarImagem.addEventListener("click", function() {
     fecharMenuImagem();
 });
 
-document.addEventListener("mousedown", function(event) {
+document.addEventListener("pointerdown", function(event) {
     if (!menuImagem.contains(event.target)) {
         fecharMenuImagem();
     }
