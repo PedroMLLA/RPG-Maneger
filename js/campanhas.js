@@ -51,6 +51,17 @@ function avisar(texto) {
     nomeEmDestaque.textContent = texto;
 }
 
+// Explica o erro: sem internet, ou o motivo que o banco deu
+function motivoDoErro(erro) {
+    const texto = (erro && erro.message) || String(erro);
+
+    if (texto.includes("Failed to fetch")) {
+        return "sem conexão com o servidor. Confira a internet";
+    }
+
+    return texto;
+}
+
 
 // ----- Banco de dados -----
 
@@ -129,7 +140,7 @@ async function carregarCampanhas() {
 
     } catch (erro) {
         console.error(erro);
-        avisar("Não foi possível carregar as campanhas. Confira a internet.");
+        avisar(`Não foi possível carregar as campanhas: ${motivoDoErro(erro)}.`);
     }
 }
 
@@ -245,7 +256,7 @@ async function excluirCampanha(campanha) {
 
     if (error) {
         console.error(error);
-        alert("Não foi possível excluir. Confira a internet e tente de novo.");
+        alert(`Não foi possível excluir: ${motivoDoErro(error)}.`);
         return;
     }
 
@@ -339,7 +350,7 @@ async function criarCampanha() {
 
     } catch (erro) {
         console.error(erro);
-        alert("Não foi possível criar a campanha. Confira a internet e tente de novo.");
+        alert(`Não foi possível criar a campanha: ${motivoDoErro(erro)}.`);
 
     } finally {
         botaoCriarCampanha.disabled = false;

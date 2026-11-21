@@ -129,10 +129,12 @@ alter table public.jogadores      enable row level security;
 
 
 -- ---------- Regras: campanhas ----------
+-- "dono = auth.uid()" vem primeiro de propósito: ao criar uma campanha,
+-- a pode_ver() ainda não enxerga a linha nova (veja 02-corrige-ver-campanha.sql)
 drop policy if exists "ver campanha" on public.campanhas;
 create policy "ver campanha" on public.campanhas
     for select to authenticated
-    using (public.pode_ver(id));
+    using (dono = auth.uid() or public.pode_ver(id));
 
 -- Só conta de verdade (e-mail e senha) cria campanha. Os jogadores
 -- entram como "anônimos" e não podem criar.
