@@ -456,14 +456,78 @@ Armazenamento.quandoMudar("personagens", desenharTokens);
 Armazenamento.quandoMudar("mapa", carregarMapa);
 Armazenamento.quandoMudar("imagens", desenharImagens);
 
-// Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia
+// Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia.
+// Anúncio velho (ex.: baixado de novo ao abrir a campanha) não aparece.
 Armazenamento.quandoMudar("anuncio", function(anuncio) {
-    if (anuncio) {
+    if (!anuncio) {
+        return;
+    }
+
+    const aindaValendo = Date.now() - anuncio.momento < anuncio.duracao;
+
+    if (aindaValendo) {
         exibirAnuncio(document.getElementById("anuncio-jogadores"), anuncio);
     }
 });
 
 
+// ----- Jogador que entrou pelo código (V3) -----
+// Endereço "jogador.html?campanha=ID": este aparelho pode ser o celular
+// de um jogador, sem nada salvo. Os dados vêm do banco, e o tempo real
+// mantém a tela em dia.
+async function iniciarModoJogador() {
+    const { data } = await clienteSupabase.auth.getSession();
+
+    // Sem conexão com o banco (nunca entrou pelo código neste aparelho)
+    if (!data.session) {
+        window.location.replace("entrar.html");
+        return;
+    }
+
+    try {
+        // Nome, capa e código da campanha. As regras do banco só deixam
+        // ler se este aparelho entrou com o código.
+        const { data: campanha, error } = await clienteSupabase
+            .from("campanhas")
+            .select("id, nome, imagem, codigo")
+            .eq("id", idCampanhaAtual)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        document.title = `${campanha.nome} - RPG Manager`;
+
+        // Guarda na cópia local, para o mapa padrão da campanha funcionar
+        // (sem apagar as outras campanhas, caso seja o PC do mestre)
+        const campanhas = Armazenamento.ler("campanhas", [])
+            .filter(function(outra) { return outra.id !== campanha.id; });
+
+        campanhas.push(campanha);
+        Armazenamento.salvar("campanhas", campanhas);
+
+        // true = só ler: o jogador nunca grava nada no banco
+        await Armazenamento.baixarCampanha(idCampanhaAtual, true);
+
+        carregarMapa();
+        desenharTokens();
+        desenharImagens();
+
+        Armazenamento.ligarTempoReal();
+
+    } catch (erro) {
+        console.error(erro);
+        vezJogadores.textContent = "Não foi possível abrir a mesa. Volte e digite o código de novo.";
+        vezJogadores.style.display = "block";
+    }
+}
+
+
 carregarMapa();
 desenharTokens();
 desenharImagens();
+
+if (new URLSearchParams(location.search).has("campanha")) {
+    iniciarModoJogador();
+}

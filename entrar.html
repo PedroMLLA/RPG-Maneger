@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar como jogador - RPG Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="botao-voltar">← Início</a>
+        <h1><span class="marca">RPG</span> Manager</h1>
+    </header>
+
+<main class="pagina-login">
+
+    <div class="fundo-inicio" aria-hidden="true"></div>
+
+    <form id="formulario-codigo" class="caixa-inventario caixa-login">
+
+        <span class="selo-inicio adesivo">Sou jogador</span>
+
+        <h2>Entrar na mesa</h2>
+
+        <p class="texto-ajuda">Digite o código que o mestre passou. Não precisa de conta.</p>
+
+        <label for="campo-codigo">Código da campanha</label>
+        <input type="text" id="campo-codigo" class="campo-codigo" maxlength="6"
+               autocomplete="off" autocapitalize="characters" spellcheck="false"
+               placeholder="K7P2QX" required>
+
+        <p id="mensagem-codigo" class="mensagem-login" role="alert" hidden></p>
+
+        <button type="submit" id="botao-entrar-mesa" class="botao-salvar">Entrar</button>
+
+    </form>
+
+</main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/armazenamento.js"></script>
+    <script src="js/entrar.js"></script>
+</body>
+</html>

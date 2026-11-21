@@ -14,7 +14,12 @@
 
 // Campanha escolhida na roda. Cada campanha guarda os próprios dados:
 // "personagens" vira "campanha:kotto:personagens", e assim por diante.
-const idCampanhaAtual = localStorage.getItem("campanhaAtual") || "padrao";
+// O jogador que entra pelo código abre "jogador.html?campanha=ID":
+// nesse caso, a campanha vem do endereço.
+const idCampanhaAtual =
+    new URLSearchParams(location.search).get("campanha") ||
+    localStorage.getItem("campanhaAtual") ||
+    "padrao";
 
 function chave(nome, idCampanha = idCampanhaAtual) {
     return `campanha:${idCampanha}:${nome}`;
@@ -25,19 +30,26 @@ function chave(nome, idCampanha = idCampanhaAtual) {
 //   nome:       o nome no localStorage
 //   daCampanha: true = cada campanha tem o seu (usa chave())
 //   texto:      true = guardado como texto puro, sem JSON (imagens em base64)
+//   semBackup:  true = não entra no arquivo de backup
 const TIPOS_DE_DADO = {
     personagens:     { nome: "personagens",       daCampanha: true },
     batalha:         { nome: "estadoBatalha",     daCampanha: true },
     mapa:            { nome: "mapaPersonalizado", daCampanha: true, texto: true },
     imagens:         { nome: "imagensMestre",     daCampanha: true },
 
+    // Anúncio na tela dos jogadores ("Nero está morrendo"). É da campanha
+    // para chegar, pelo banco, aos jogadores de outros aparelhos.
+    anuncio:         { nome: "anuncio",           daCampanha: true, semBackup: true },
+
     // Cópia local da lista que vem do banco (V3). Serve para o mapa saber
     // o nome, a capa e o código da campanha sem esperar o servidor.
     campanhas:       { nome: "campanhas" },
     campanhaAtual:   { nome: "campanhaAtual", texto: true },
 
-    // Avisos rápidos entre as janelas
-    anuncio:         { nome: "anuncio" },
+    // Último código digitado pelo jogador (para não precisar digitar de novo)
+    ultimoCodigo:    { nome: "ultimoCodigo", texto: true },
+
+    // Aviso rápido entre a janela do Painel do Mestre e o mapa
     inimigoParaMapa: { nome: "inimigoParaMapa" }
 };
 
@@ -276,8 +288,9 @@ const Armazenamento = {
     },
 
     // Ao abrir uma campanha: traz os dados do banco para a cópia local.
-    // O que só existe aqui (dados de antes da V3) sobe para o banco.
-    async baixarCampanha(idCampanha) {
+    // O que só existe aqui (dados de antes da V3) sobe para o banco,
+    // menos quando "somenteLer" é true (o jogador não pode gravar).
+    async baixarCampanha(idCampanha, somenteLer = false) {
         const { data, error } = await clienteSupabase
             .from("dados_campanha")
             .select("tipo, valor")
@@ -302,7 +315,7 @@ const Armazenamento = {
                 const texto = info.texto ? linha.valor : JSON.stringify(linha.valor);
                 localStorage.setItem(nomeLocal, texto);
 
-            } else if (localStorage.getItem(nomeLocal) !== null) {
+            } else if (!somenteLer && localStorage.getItem(nomeLocal) !== null) {
                 // Só existe aqui: sobe para o banco
                 await gravarNoBanco(tipo, idCampanha);
             }
@@ -364,7 +377,7 @@ const Armazenamento = {
         const dados = {};
 
         for (const tipo in TIPOS_DE_DADO) {
-            if (TIPOS_DE_DADO[tipo].daCampanha) {
+            if (TIPOS_DE_DADO[tipo].daCampanha && !TIPOS_DE_DADO[tipo].semBackup) {
                 dados[TIPOS_DE_DADO[tipo].nome] = this.ler(tipo);
             }
         }
@@ -376,7 +389,7 @@ const Armazenamento = {
     // Se não couber, desfaz tudo e devolve false.
     importarCampanha(dados) {
         const tipos = Object.keys(TIPOS_DE_DADO).filter(function(tipo) {
-            return TIPOS_DE_DADO[tipo].daCampanha;
+            return TIPOS_DE_DADO[tipo].daCampanha && !TIPOS_DE_DADO[tipo].semBackup;
         });
 
         // Guarda como está agora, para poder voltar atrás se der erro
@@ -422,7 +435,7 @@ function migrarDadosAntigos() {
     }
 
     const tiposDaCampanha = Object.keys(TIPOS_DE_DADO).filter(function(tipo) {
-        return TIPOS_DE_DADO[tipo].daCampanha;
+        return TIPOS_DE_DADO[tipo].daCampanha && !TIPOS_DE_DADO[tipo].semBackup;
     });
 
     const temDadosAntigos = tiposDaCampanha.some(function(tipo) {

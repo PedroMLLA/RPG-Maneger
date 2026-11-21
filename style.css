@@ -527,6 +527,26 @@ header h1 .marca,
     transform: translate(3px, -3px);
 }
 
+/* Os dois botões da página inicial, lado a lado (um embaixo do outro no celular) */
+.botoes-inicio {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* "Sou jogador": contorno, para o "Sou mestre" continuar em destaque */
+.botao-jogador {
+    color: var(--texto);
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--texto);
+}
+
+.botao-jogador:hover {
+    color: var(--tinta);
+    background: var(--texto);
+}
+
 
 /* ---------- 6. Tela de batalha: estrutura ---------- */
 #area-batalha {
@@ -3143,6 +3163,27 @@ button:active:not(:disabled) {
 .botao-link:hover {
     background: none;
     color: var(--texto);
+}
+
+/* Página do jogador: campo grande para o código */
+.texto-ajuda {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--texto-suave);
+}
+
+.campo-codigo {
+    padding: 14px;
+    text-align: center;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+}
+
+.campo-codigo::placeholder {
+    color: var(--texto-apagado);
 }
 
 /* Código da campanha no cabeçalho do mapa */
