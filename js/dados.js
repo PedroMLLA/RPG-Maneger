@@ -27,7 +27,7 @@ const personagens = {
         hpMaximo: 78,
         sanidade: 25,
         sanidadeMaxima: 25,
-        imagem: "imagens-personagens/jotton.png"
+        imagem: "imagens-personagens/jotton.jpg"
     },
 
     calisto: {
