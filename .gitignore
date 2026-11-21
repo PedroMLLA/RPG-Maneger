@@ -1,0 +1,7 @@
+# Arquivos que o Windows cria sozinho nas pastas
+Thumbs.db
+desktop.ini
+
+# Configurações locais de editores
+.vscode/
+.claude/
