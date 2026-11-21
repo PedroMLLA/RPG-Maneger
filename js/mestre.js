@@ -282,3 +282,6 @@ atualizarInimigos();
 // botão Nova batalha), e aí os botões "Adicionar ao mapa" se acertam.
 Armazenamento.quandoMudar("personagens", atualizarInimigos);
 Armazenamento.quandoMudar("batalha", atualizarInimigos);
+
+// Tempo real (V3): mudanças feitas em outro aparelho chegam na hora
+Armazenamento.ligarTempoReal();

@@ -78,10 +78,20 @@ function temBanco() {
     return typeof clienteSupabase !== "undefined" && idCampanhaAtual !== "padrao";
 }
 
+// Horários (em milissegundos) dos envios feitos por ESTA página.
+// O tempo real avisa todo mundo de cada mudança, inclusive quem mudou;
+// pelo horário, a página reconhece o próprio "eco" e ignora.
+const enviadosPorMim = new Set();
+
 // Grava (ou apaga, se não houver valor) a linha de um tipo no banco
 async function gravarNoBanco(tipo, idCampanha) {
     const texto = localStorage.getItem(nomeNoStorage(tipo, idCampanha));
     const valor = converterDoStorage(tipo, texto, null);
+    const agora = new Date();
+
+    if (valor !== null) {
+        enviadosPorMim.add(agora.getTime());
+    }
 
     const resposta = valor === null
         ? await clienteSupabase
@@ -95,7 +105,7 @@ async function gravarNoBanco(tipo, idCampanha) {
                 campanha_id: idCampanha,
                 tipo: tipo,
                 valor: valor,
-                atualizado_em: new Date().toISOString()
+                atualizado_em: agora.toISOString()
             });
 
     if (resposta.error) {
@@ -138,7 +148,103 @@ async function enviarParaOBanco(tipo) {
 }
 
 
+// ----- Tempo real (V3) -----
+// O Supabase avisa pela internet, na hora, quando uma linha de
+// "dados_campanha" desta campanha muda, venha de onde vier (outro
+// computador, celular...). Funciona como o evento "storage", só que
+// entre aparelhos diferentes.
+
+// Quem pediu para ser avisado de cada tipo (pelo quandoMudar)
+const ouvintes = {};
+
+function avisarOuvintes(tipo, valor) {
+    for (const funcao of ouvintes[tipo] || []) {
+        funcao(valor);
+    }
+}
+
+// Chegou uma mudança do banco
+async function receberDoBanco(linha) {
+    const tipo = linha.tipo;
+    const info = TIPOS_DE_DADO[tipo];
+
+    if (!info || !info.daCampanha) {
+        return;
+    }
+
+    // É o eco de uma gravação desta própria página: ignora
+    const horario = Date.parse(linha.atualizado_em);
+
+    if (enviadosPorMim.has(horario)) {
+        enviadosPorMim.delete(horario);
+        return;
+    }
+
+    let valor = linha.valor;
+
+    // Mudanças muito grandes (ex.: mapa em alta resolução) podem chegar
+    // sem o valor. Aí buscamos a linha inteira no banco.
+    if (valor === undefined) {
+        const { data, error } = await clienteSupabase
+            .from("dados_campanha")
+            .select("valor")
+            .eq("campanha_id", idCampanhaAtual)
+            .eq("tipo", tipo)
+            .single();
+
+        if (error) {
+            console.error(`Não foi possível buscar "${tipo}" do banco:`, error);
+            return;
+        }
+
+        valor = data.valor;
+    }
+
+    // Atualiza a cópia local. Isso também avisa as OUTRAS janelas deste
+    // navegador (ex.: a Visão dos Jogadores) pelo evento "storage".
+    try {
+        const texto = info.texto ? valor : JSON.stringify(valor);
+        localStorage.setItem(nomeNoStorage(tipo), texto);
+    } catch (erro) {
+        console.error(erro);
+    }
+
+    // E avisa esta página
+    avisarOuvintes(tipo, valor);
+}
+
+
 const Armazenamento = {
+
+    // Liga a escuta do banco para a campanha atual. As páginas que
+    // acompanham a batalha (mapa, Painel do Mestre) chamam uma vez.
+    ligarTempoReal() {
+        if (!temBanco()) {
+            return;
+        }
+
+        clienteSupabase
+            .channel(`campanha-${idCampanhaAtual}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",                 // INSERT ou UPDATE
+                    schema: "public",
+                    table: "dados_campanha",
+                    filter: `campanha_id=eq.${idCampanhaAtual}`
+                },
+                function(mudanca) {
+                    if (mudanca.new && mudanca.new.tipo) {
+                        receberDoBanco(mudanca.new);
+                    }
+                }
+            )
+            .subscribe(function(estado) {
+                if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") {
+                    console.error("Tempo real: não foi possível conectar.", estado);
+                }
+            });
+    },
 
     // Lê um dado. Se ele não existir, devolve o "padrao".
     ler(tipo, padrao = null) {
@@ -203,9 +309,12 @@ const Armazenamento = {
         }
     },
 
-    // Chama "funcao(valorNovo)" quando OUTRA janela muda esse dado.
-    // (O evento "storage" do navegador só dispara nas outras janelas.)
+    // Chama "funcao(valorNovo)" quando OUTRA janela ou OUTRO aparelho
+    // muda esse dado. Outras janelas deste navegador: evento "storage"
+    // (que só dispara nas outras janelas). Outros aparelhos: tempo real.
     quandoMudar(tipo, funcao) {
+        (ouvintes[tipo] || (ouvintes[tipo] = [])).push(funcao);
+
         window.addEventListener("storage", function(event) {
             if (event.key === nomeNoStorage(tipo)) {
                 funcao(converterDoStorage(tipo, event.newValue, null));

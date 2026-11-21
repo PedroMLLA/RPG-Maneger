@@ -105,3 +105,6 @@ for (const id in estadoSalvo.tokens) {
 // 5) O turno só é restaurado no fim, com todos os tokens já no mapa
 turnoAtual = estadoSalvo.turnoAtual || 0;
 atualizarIniciativa();
+
+// 6) Tempo real (V3): mudanças feitas em outro aparelho chegam na hora
+Armazenamento.ligarTempoReal();
