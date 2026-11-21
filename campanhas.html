@@ -5,11 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escolher campanha - RPG Manager</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Login (V3): só o mestre logado vê esta página -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/sessao.js"></script>
 </head>
 <body>
     <header>
         <a href="index.html" class="botao-voltar">← Início</a>
         <h1><span class="marca">RPG</span> Manager</h1>
+
+        <!-- Ligado pelo sessao.js -->
+        <button id="botao-sair" class="botao-sair">Sair</button>
     </header>
 
 <main class="pagina-campanhas">
