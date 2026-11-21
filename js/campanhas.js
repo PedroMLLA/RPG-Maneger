@@ -79,19 +79,33 @@ async function buscarCampanhas() {
     return data;
 }
 
-// Cria uma campanha no banco e devolve a linha criada (com id e código)
+// Cria uma campanha no banco e devolve a linha criada (com id e código).
+// São DOIS pedidos separados de propósito: "cria" e depois "me mostra".
+// Pedir os dois juntos (insert + select) fazia a regra de leitura
+// conferir a campanha antes de ela existir, e o banco recusava.
 async function inserirCampanha(nome, imagem) {
-    const { data, error } = await clienteSupabase
-        .from("campanhas")
-        .insert({ nome: nome, imagem: imagem })
-        .select(COLUNAS)
-        .single();
+    // O id é sorteado aqui, para depois buscarmos a campanha por ele
+    const id = crypto.randomUUID();
 
-    if (error) {
-        throw error;
+    const criacao = await clienteSupabase
+        .from("campanhas")
+        .insert({ id: id, nome: nome, imagem: imagem });
+
+    if (criacao.error) {
+        throw criacao.error;
     }
 
-    return data;
+    const busca = await clienteSupabase
+        .from("campanhas")
+        .select(COLUNAS)
+        .eq("id", id)
+        .single();
+
+    if (busca.error) {
+        throw busca.error;
+    }
+
+    return busca.data;
 }
 
 // Primeira vez na V3: as campanhas que estavam só no navegador vão para
