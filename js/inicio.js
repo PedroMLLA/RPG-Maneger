@@ -7,10 +7,57 @@ const personagensSalvos =
     Armazenamento.ler("personagens", {});
 
 for (const id in personagensSalvos) {
+    // Guarda a ficha padrão antes de juntar com o que estava salvo
+    const fichaBase = personagens[id];
+
     personagens[id] = {
         ...personagens[id],
         ...personagensSalvos[id]
     };
+
+    if (idsFixos.includes(id) && fichaBase) {
+        atualizarFichaBase(id, fichaBase);
+    }
+}
+
+// Os 4 principais: vida máxima, sanidade máxima e imagem vêm do dados.js.
+// A vida e a sanidade ATUAIS se ajustam ao novo máximo:
+//  - quem estava cheio continua cheio (70/70 vira 78/78)
+//  - quem estava machucado continua com o mesmo valor, sem passar do máximo
+function atualizarFichaBase(id, fichaBase) {
+    const personagem = personagens[id];
+    let mudou = false;
+
+    function ajustar(campoAtual, campoMaximo) {
+        const maximoAntigo = personagem[campoMaximo];
+        const maximoNovo = fichaBase[campoMaximo];
+
+        if (maximoAntigo === maximoNovo) {
+            return;
+        }
+
+        const estavaCheio = personagem[campoAtual] >= maximoAntigo;
+
+        personagem[campoMaximo] = maximoNovo;
+        personagem[campoAtual] = estavaCheio
+            ? maximoNovo
+            : Math.min(personagem[campoAtual], maximoNovo);
+
+        mudou = true;
+    }
+
+    ajustar("hp", "hpMaximo");
+    ajustar("sanidade", "sanidadeMaxima");
+
+    if (personagem.imagem !== fichaBase.imagem) {
+        personagem.imagem = fichaBase.imagem;
+        mudou = true;
+    }
+
+    // Salva, para a visão dos jogadores também ver os valores novos
+    if (mudou) {
+        salvarPersonagemNoStorage(id);
+    }
 }
 
 // 2) Garante que os personagens padrão (Nero, Shin...) também estejam

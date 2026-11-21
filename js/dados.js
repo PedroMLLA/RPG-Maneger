@@ -23,21 +23,27 @@ const personagens = {
 
     jotton: {
         nome: "Jotton",
-        hp: 70,
-        hpMaximo: 70,
-        sanidade: 29,
-        sanidadeMaxima: 29,
+        hp: 78,
+        hpMaximo: 78,
+        sanidade: 25,
+        sanidadeMaxima: 25,
         imagem: "imagens-personagens/jotton.png"
     },
 
     calisto: {
         nome: "Calisto",
-        hp: 100,
-        hpMaximo: 100,
-        sanidade: 50,
-        sanidadeMaxima: 50
+        hp: 59,
+        hpMaximo: 59,
+        sanidade: 24,
+        sanidadeMaxima: 24,
+        imagem: "imagens-personagens/calisto.png"
     }
 };
+
+// Para os 4 principais, a vida máxima, a sanidade máxima e a imagem
+// vêm SEMPRE daqui, mesmo que o navegador tenha um valor antigo salvo
+// (veja atualizarFichaBase no inicio.js). Assim, mudar esses números
+// aqui vale para todas as campanhas.
 
 // Os 4 personagens fixos já têm botão no HTML
 const idsFixos = ["nero", "shin", "jotton", "calisto"];
