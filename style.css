@@ -3145,6 +3145,27 @@ button:active:not(:disabled) {
     color: var(--texto);
 }
 
+/* Código da campanha no cabeçalho do mapa */
+.codigo-campanha {
+    padding: 5px 12px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+
+    color: var(--destaque-forte);
+    background: rgba(var(--destaque-rgb), 0.1);
+    border: 1px dashed rgba(var(--destaque-rgb), 0.6);
+    border-radius: var(--pilula);
+}
+
+.codigo-campanha:hover {
+    color: var(--texto);
+    border-style: solid;
+    border-color: var(--destaque);
+}
+
 /* Botão "Sair" no cabeçalho das páginas do mestre */
 .botao-sair {
     margin-left: auto;

@@ -2,9 +2,10 @@
 // Passar o mouse faz a campanha crescer e mostrar o nome;
 // clicar escolhe a campanha e abre o mapa.
 //
-// Dados guardados (pelo Armazenamento):
-//   "campanhas"     → [ { id, nome, imagem }, ... ]
-//   "campanhaAtual" → id da campanha escolhida
+// V3: as campanhas moram no banco (tabela "campanhas" do Supabase),
+// cada uma com o seu código para os jogadores entrarem.
+// Uma cópia da lista fica no Armazenamento ("campanhas"), para o mapa
+// saber o nome e o código sem esperar o servidor.
 
 const rodaCampanhas = document.getElementById("roda-campanhas");
 const nomeEmDestaque = document.getElementById("nome-em-destaque");
@@ -27,20 +28,108 @@ const CAMPANHAS_PADRAO = [
     { id: "demetria", nome: "Demetria", imagem: "mapas/demetria.jfif" }
 ];
 
-let campanhas = Armazenamento.ler("campanhas", CAMPANHAS_PADRAO);
+// As colunas que pedimos ao banco
+const COLUNAS = "id, nome, imagem, codigo";
+
+let campanhas = [];
 
 // Imagem escolhida na janela de nova campanha (já otimizada)
 let imagemNova = null;
 
 
-function salvarCampanhas() {
+// Atualiza a cópia local (o mapa usa para mostrar nome e código)
+function guardarCopiaLocal() {
     try {
         Armazenamento.salvar("campanhas", campanhas);
-        return true;
     } catch (erro) {
         console.error(erro);
-        alert("Não coube no armazenamento do navegador. Tente uma imagem menor.");
-        return false;
+    }
+}
+
+// Avisos embaixo da roda ("Carregando...", erros)
+function avisar(texto) {
+    nomeEmDestaque.textContent = texto;
+}
+
+
+// ----- Banco de dados -----
+
+// Busca as campanhas do mestre logado, da mais antiga para a mais nova
+async function buscarCampanhas() {
+    const { data, error } = await clienteSupabase
+        .from("campanhas")
+        .select(COLUNAS)
+        .order("criada_em");
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+// Cria uma campanha no banco e devolve a linha criada (com id e código)
+async function inserirCampanha(nome, imagem) {
+    const { data, error } = await clienteSupabase
+        .from("campanhas")
+        .insert({ nome: nome, imagem: imagem })
+        .select(COLUNAS)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+// Primeira vez na V3: as campanhas que estavam só no navegador vão para
+// o banco. Os dados delas (personagens, batalha...) acompanham o id novo.
+// Se nunca houve nenhuma (nem aqui, nem no banco), cria Kotto e Demetria.
+async function levarCampanhasAntigas() {
+    let locais = Armazenamento.ler("campanhas", null);
+
+    if (locais === null) {
+        // Outro computador, com as campanhas já no banco: nada a levar
+        if (campanhas.length > 0) {
+            return;
+        }
+        locais = CAMPANHAS_PADRAO;
+    }
+
+    for (const antiga of locais) {
+        // As que já estão no banco têm código; as antigas, não
+        if (antiga.codigo) {
+            continue;
+        }
+
+        const nova = await inserirCampanha(antiga.nome, antiga.imagem || null);
+        Armazenamento.moverCampanha(antiga.id, nova.id);
+        campanhas.push(nova);
+
+        // Troca na cópia local NA HORA: se a internet cair no meio,
+        // a próxima tentativa não manda esta de novo
+        locais = locais.map(function(campanha) {
+            return campanha === antiga ? nova : campanha;
+        });
+        Armazenamento.salvar("campanhas", locais);
+    }
+}
+
+async function carregarCampanhas() {
+    avisar("Carregando campanhas...");
+
+    try {
+        campanhas = await buscarCampanhas();
+        await levarCampanhasAntigas();
+
+        guardarCopiaLocal();
+        avisar(TEXTO_PADRAO);
+        desenharRoda();
+
+    } catch (erro) {
+        console.error(erro);
+        avisar("Não foi possível carregar as campanhas. Confira a internet.");
     }
 }
 
@@ -143,8 +232,20 @@ function escolherCampanha(campanha) {
     window.location.href = "mapa.html";
 }
 
-function excluirCampanha(campanha) {
+async function excluirCampanha(campanha) {
     if (!confirm(`Excluir a campanha "${campanha.nome}"?\n\nO mapa, os personagens e a batalha dela serão apagados.`)) {
+        return;
+    }
+
+    // Apaga no banco (os dados e os jogadores dela vão junto)
+    const { error } = await clienteSupabase
+        .from("campanhas")
+        .delete()
+        .eq("id", campanha.id);
+
+    if (error) {
+        console.error(error);
+        alert("Não foi possível excluir. Confira a internet e tente de novo.");
         return;
     }
 
@@ -152,7 +253,7 @@ function excluirCampanha(campanha) {
         return outra.id !== campanha.id;
     });
 
-    // Apaga os dados guardados dessa campanha (armazenamento.js)
+    // Apaga os dados guardados no navegador (armazenamento.js)
     Armazenamento.apagarCampanha(campanha.id);
 
     // Se era a campanha escolhida, ninguém fica escolhido
@@ -160,8 +261,8 @@ function excluirCampanha(campanha) {
         Armazenamento.apagar("campanhaAtual");
     }
 
-    salvarCampanhas();
-    nomeEmDestaque.textContent = TEXTO_PADRAO;
+    guardarCopiaLocal();
+    avisar(TEXTO_PADRAO);
     desenharRoda();
 }
 
@@ -215,7 +316,7 @@ campoImagemCampanha.addEventListener("change", function() {
     });
 });
 
-function criarCampanha() {
+async function criarCampanha() {
     const nome = campoNomeCampanha.value.trim();
 
     if (!nome) {
@@ -224,20 +325,25 @@ function criarCampanha() {
         return;
     }
 
-    campanhas.push({
-        id: `campanha-${Date.now()}`,
-        nome: nome,
-        imagem: imagemNova
-    });
+    // Evita criar duas vezes com cliques seguidos enquanto o banco responde
+    botaoCriarCampanha.disabled = true;
 
-    // Não coube: tira de novo, para a lista bater com o que está salvo
-    if (!salvarCampanhas()) {
-        campanhas.pop();
-        return;
+    try {
+        // O banco devolve a campanha já com o id e o código
+        const nova = await inserirCampanha(nome, imagemNova);
+        campanhas.push(nova);
+
+        guardarCopiaLocal();
+        fecharJanelaCampanha();
+        desenharRoda();
+
+    } catch (erro) {
+        console.error(erro);
+        alert("Não foi possível criar a campanha. Confira a internet e tente de novo.");
+
+    } finally {
+        botaoCriarCampanha.disabled = false;
     }
-
-    fecharJanelaCampanha();
-    desenharRoda();
 }
 
 botaoCriarCampanha.addEventListener("click", criarCampanha);
@@ -250,5 +356,4 @@ campoNomeCampanha.addEventListener("keydown", function(event) {
 });
 
 
-salvarCampanhas();
-desenharRoda();
+carregarCampanhas();

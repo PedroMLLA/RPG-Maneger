@@ -31,6 +31,8 @@ const TIPOS_DE_DADO = {
     mapa:            { nome: "mapaPersonalizado", daCampanha: true, texto: true },
     imagens:         { nome: "imagensMestre",     daCampanha: true },
 
+    // Cópia local da lista que vem do banco (V3). Serve para o mapa saber
+    // o nome, a capa e o código da campanha sem esperar o servidor.
     campanhas:       { nome: "campanhas" },
     campanhaAtual:   { nome: "campanhaAtual", texto: true },
 
@@ -99,6 +101,31 @@ const Armazenamento = {
             if (TIPOS_DE_DADO[tipo].daCampanha) {
                 this.apagar(tipo, idCampanha);
             }
+        }
+    },
+
+    // Muda o id de uma campanha nos dados guardados (ex.: "kotto" vira
+    // o id que o banco deu). Personagens, batalha etc. vão junto.
+    moverCampanha(idAntigo, idNovo) {
+        for (const tipo in TIPOS_DE_DADO) {
+            if (!TIPOS_DE_DADO[tipo].daCampanha) {
+                continue;
+            }
+
+            const nomeAntigo = nomeNoStorage(tipo, idAntigo);
+            const valor = localStorage.getItem(nomeAntigo);
+
+            if (valor === null) {
+                continue;
+            }
+
+            // Tira antes de gravar: o mapa pode ser grande
+            localStorage.removeItem(nomeAntigo);
+            localStorage.setItem(nomeNoStorage(tipo, idNovo), valor);
+        }
+
+        if (localStorage.getItem("campanhaAtual") === idAntigo) {
+            localStorage.setItem("campanhaAtual", idNovo);
         }
     },
 

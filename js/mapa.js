@@ -40,6 +40,28 @@ if (!campanhaAtual) {
     const etiquetaCampanha = document.getElementById("campanha-atual");
     etiquetaCampanha.textContent = campanhaAtual.nome;
     etiquetaCampanha.hidden = false;
+
+    // Código para os jogadores (V3). Clicar copia para mandar no grupo.
+    if (campanhaAtual.codigo) {
+        const botaoCodigo = document.getElementById("codigo-campanha");
+        const textoCodigo = `🔑 ${campanhaAtual.codigo}`;
+
+        botaoCodigo.textContent = textoCodigo;
+        botaoCodigo.hidden = false;
+
+        botaoCodigo.addEventListener("click", async function() {
+            try {
+                await navigator.clipboard.writeText(campanhaAtual.codigo);
+                botaoCodigo.textContent = "✔ Copiado!";
+            } catch (erro) {
+                botaoCodigo.textContent = "Não deu para copiar";
+            }
+
+            setTimeout(function() {
+                botaoCodigo.textContent = textoCodigo;
+            }, 1500);
+        });
+    }
 }
 
 
