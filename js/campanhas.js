@@ -235,7 +235,10 @@ function criarItemCampanha(campanha) {
     });
 
     item.addEventListener("mouseleave", function() {
-        nomeEmDestaque.textContent = TEXTO_PADRAO;
+        // Enquanto abre uma campanha, mantém o "Abrindo..." na tela
+        if (!abrindo) {
+            nomeEmDestaque.textContent = TEXTO_PADRAO;
+        }
     });
 
     item.addEventListener("click", function(event) {
@@ -252,7 +255,37 @@ function criarItemCampanha(campanha) {
     return item;
 }
 
-function escolherCampanha(campanha) {
+// Evita abrir duas campanhas com cliques seguidos
+let abrindo = false;
+
+async function escolherCampanha(campanha) {
+    if (abrindo) {
+        return;
+    }
+
+    abrindo = true;
+    avisar(`Abrindo ${campanha.nome}...`);
+
+    try {
+        // Traz personagens, batalha, mapa e imagens do banco (e, na
+        // primeira vez, sobe o que estava só neste navegador)
+        await Armazenamento.baixarCampanha(campanha.id);
+
+    } catch (erro) {
+        console.error(erro);
+
+        const abrirMesmoAssim = confirm(
+            `Não foi possível baixar os dados da campanha: ${motivoDoErro(erro)}.\n\n` +
+            "Abrir com o que está salvo neste computador?"
+        );
+
+        if (!abrirMesmoAssim) {
+            abrindo = false;
+            avisar(TEXTO_PADRAO);
+            return;
+        }
+    }
+
     Armazenamento.salvar("campanhaAtual", campanha.id);
     window.location.href = "mapa.html";
 }

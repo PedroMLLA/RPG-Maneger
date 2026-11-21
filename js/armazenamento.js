@@ -66,6 +66,78 @@ function converterDoStorage(tipo, texto, padrao) {
 }
 
 
+// ----- Banco de dados (V3) -----
+// Os dados da campanha também ficam na tabela "dados_campanha" do
+// Supabase, uma linha por tipo. O localStorage vira uma CÓPIA LOCAL:
+// ler continua rápido (sem esperar a internet), e cada gravação
+// também é enviada ao banco, sem travar a tela.
+
+// Só as páginas do mestre carregam o Supabase. Na Visão dos Jogadores
+// (neste mesmo PC) "clienteSupabase" não existe, e nada é enviado.
+function temBanco() {
+    return typeof clienteSupabase !== "undefined" && idCampanhaAtual !== "padrao";
+}
+
+// Grava (ou apaga, se não houver valor) a linha de um tipo no banco
+async function gravarNoBanco(tipo, idCampanha) {
+    const texto = localStorage.getItem(nomeNoStorage(tipo, idCampanha));
+    const valor = converterDoStorage(tipo, texto, null);
+
+    const resposta = valor === null
+        ? await clienteSupabase
+            .from("dados_campanha")
+            .delete()
+            .eq("campanha_id", idCampanha)
+            .eq("tipo", tipo)
+        : await clienteSupabase
+            .from("dados_campanha")
+            .upsert({
+                campanha_id: idCampanha,
+                tipo: tipo,
+                valor: valor,
+                atualizado_em: new Date().toISOString()
+            });
+
+    if (resposta.error) {
+        throw resposta.error;
+    }
+}
+
+// Fila de envio: se o mestre der 5 cliques de dano seguidos, não saem
+// 5 pedidos atropelados. Enquanto um envio está a caminho, os próximos
+// só marcam "manda de novo", e no fim sai a versão MAIS NOVA.
+const filaDeEnvio = {};
+
+async function enviarParaOBanco(tipo) {
+    if (!temBanco()) {
+        return;
+    }
+
+    const fila = filaDeEnvio[tipo] || (filaDeEnvio[tipo] = { enviando: false, deNovo: false });
+
+    if (fila.enviando) {
+        fila.deNovo = true;
+        return;
+    }
+
+    fila.enviando = true;
+
+    try {
+        do {
+            fila.deNovo = false;
+            await gravarNoBanco(tipo, idCampanhaAtual);
+        } while (fila.deNovo);
+
+    } catch (erro) {
+        // Fica na cópia local; a próxima gravação tenta de novo
+        console.error(`Não foi possível enviar "${tipo}" ao banco:`, erro);
+
+    } finally {
+        fila.enviando = false;
+    }
+}
+
+
 const Armazenamento = {
 
     // Lê um dado. Se ele não existir, devolve o "padrao".
@@ -75,14 +147,60 @@ const Armazenamento = {
     },
 
     // Grava um dado. Se não couber no navegador, dá erro (quem chama
-    // decide o que fazer com o try/catch).
+    // decide o que fazer com o try/catch). Dados da campanha também
+    // vão para o banco.
     salvar(tipo, valor) {
         const texto = TIPOS_DE_DADO[tipo].texto ? valor : JSON.stringify(valor);
         localStorage.setItem(nomeNoStorage(tipo), texto);
+
+        if (TIPOS_DE_DADO[tipo].daCampanha) {
+            enviarParaOBanco(tipo);
+        }
     },
 
+    // Sem idCampanha: apaga da campanha atual (e do banco).
+    // Com idCampanha: só a cópia local (usado ao excluir a campanha;
+    // no banco, os dados somem junto com ela).
     apagar(tipo, idCampanha) {
         localStorage.removeItem(nomeNoStorage(tipo, idCampanha));
+
+        if (idCampanha === undefined && TIPOS_DE_DADO[tipo].daCampanha) {
+            enviarParaOBanco(tipo);
+        }
+    },
+
+    // Ao abrir uma campanha: traz os dados do banco para a cópia local.
+    // O que só existe aqui (dados de antes da V3) sobe para o banco.
+    async baixarCampanha(idCampanha) {
+        const { data, error } = await clienteSupabase
+            .from("dados_campanha")
+            .select("tipo, valor")
+            .eq("campanha_id", idCampanha);
+
+        if (error) {
+            throw error;
+        }
+
+        for (const tipo in TIPOS_DE_DADO) {
+            const info = TIPOS_DE_DADO[tipo];
+
+            if (!info.daCampanha) {
+                continue;
+            }
+
+            const linha = data.find(function(l) { return l.tipo === tipo; });
+            const nomeLocal = nomeNoStorage(tipo, idCampanha);
+
+            if (linha) {
+                // O banco manda: atualiza a cópia local
+                const texto = info.texto ? linha.valor : JSON.stringify(linha.valor);
+                localStorage.setItem(nomeLocal, texto);
+
+            } else if (localStorage.getItem(nomeLocal) !== null) {
+                // Só existe aqui: sobe para o banco
+                await gravarNoBanco(tipo, idCampanha);
+            }
+        }
     },
 
     // Chama "funcao(valorNovo)" quando OUTRA janela muda esse dado.
