@@ -99,13 +99,8 @@ arquivoMapa.addEventListener("change", function() {
 
     // Mapas precisam de mais detalhe que tokens, então o limite é 2000px.
     otimizarImagem(arquivo, function(imagemOtimizada) {
+        // Quando a imagem nova carregar, o "load" lá embaixo encaixa ela na tela
         imagemMapa.src = imagemOtimizada;
-
-        escala = 1;
-        posicaoX = 0;
-        posicaoY = 0;
-
-        atualizarMapa();
 
         try {
             Armazenamento.salvar("mapa", imagemOtimizada);
@@ -126,26 +121,55 @@ let arrastando = false;
 let mouseX = 0;
 let mouseY = 0;
 
+// Limites do zoom. O mínimo muda com o mapa: um mapa grande num
+// celular precisa diminuir bem mais que 0.5 para caber inteiro.
+let escalaMinima = 0.5;
+const ESCALA_MAXIMA = 3;
+
+function limitarEscala(valor) {
+    return Math.min(ESCALA_MAXIMA, Math.max(escalaMinima, valor));
+}
+
 function atualizarMapa() {
     conteudoMapa.style.transform =
         `translate(${posicaoX}px, ${posicaoY}px) scale(${escala})`;
+}
+
+// A imagem agora fica no tamanho original (pode ter 2000px), então
+// começamos com um zoom que mostra o mapa inteiro, centralizado.
+// Igual ao ajustarNaTela() da visão dos jogadores.
+function encaixarMapa() {
+    const largura = imagemMapa.naturalWidth;
+    const altura = imagemMapa.naturalHeight;
+
+    if (!largura || !altura) {
+        return;
+    }
+
+    const cabe = Math.min(mapa.clientWidth / largura, mapa.clientHeight / altura);
+
+    escalaMinima = Math.min(0.5, cabe);
+    escala = cabe;
+    posicaoX = (mapa.clientWidth - largura * escala) / 2;
+    posicaoY = (mapa.clientHeight - altura * escala) / 2;
+
+    atualizarMapa();
+}
+
+imagemMapa.addEventListener("load", encaixarMapa);
+
+// A imagem pode ter carregado antes deste código rodar (já estava no cache)
+if (imagemMapa.complete) {
+    encaixarMapa();
 }
 
 mapa.addEventListener("wheel", function(event) {
     event.preventDefault();
 
     if (event.deltaY < 0) {
-        escala += 0.1;
+        escala = limitarEscala(escala + 0.1);
     } else {
-        escala -= 0.1;
-    }
-
-    if (escala < 0.5) {
-        escala = 0.5;
-    }
-
-    if (escala > 3) {
-        escala = 3;
+        escala = limitarEscala(escala - 0.1);
     }
 
     atualizarMapa();
@@ -188,7 +212,7 @@ document.addEventListener("pointermove", function(event) {
         dedosNoMapa.set(event.pointerId, { x: event.clientX, y: event.clientY });
         const agora = distanciaDosDedos();
 
-        escala = Math.min(3, Math.max(0.5, escala * (agora / antes)));
+        escala = limitarEscala(escala * (agora / antes));
         atualizarMapa();
         return;
     }

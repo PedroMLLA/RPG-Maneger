@@ -835,6 +835,16 @@ header h1 .marca,
     -webkit-user-drag: none;
 }
 
+/* A imagem do mapa fica SEMPRE no tamanho original dela, como na
+   visão dos jogadores. Assim "x: 300px" é o mesmo ponto nas duas telas.
+   (Sem isso ela encolhia para caber na janela do mestre, e os tokens
+   apareciam em outro lugar para os jogadores.) O zoom faz caber. */
+#mapa #imagem-mapa {
+    width: auto;
+    height: auto;
+    max-width: none;
+}
+
 #grade-mapa {
     position: absolute;
     left: 0;
