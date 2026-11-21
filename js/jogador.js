@@ -1,5 +1,5 @@
-// Visão dos Jogadores: só LÊ o que o mapa do mestre salva no
-// localStorage e desenha na tela. Esta página nunca salva nada.
+// Visão dos Jogadores: só LÊ o que o mapa do mestre salva
+// (pelo Armazenamento) e desenha na tela. Esta página nunca salva nada.
 
 const imagemMapa = document.getElementById("imagem-mapa");
 const conteudoMapa = document.getElementById("conteudo-mapa");
@@ -17,17 +17,10 @@ const ultimoHp = {};
 const vidaDoTokenAntes = {};
 
 
-// Lê uma chave do localStorage já convertida de texto para objeto.
-// Se a chave não existir, devolve o "padrao".
-function lerDoStorage(chave, padrao) {
-    return JSON.parse(localStorage.getItem(chave)) || padrao;
-}
-
-
 // Mostra o mesmo mapa que o mestre está usando.
 function carregarMapa() {
     imagemMapa.src =
-        localStorage.getItem(chave("mapaPersonalizado")) || mapaPadraoDaCampanha();
+        Armazenamento.ler("mapa") || mapaPadraoDaCampanha();
 }
 
 
@@ -57,8 +50,8 @@ function ajustarNaTela() {
 
 // Apaga os tokens e desenha de novo, a partir do estado salvo.
 function desenharTokens() {
-    const personagens = lerDoStorage(chave("personagens"), {});
-    const estado = lerDoStorage(chave("estadoBatalha"), { tokens: {} });
+    const personagens = Armazenamento.ler("personagens", {});
+    const estado = Armazenamento.ler("batalha", { tokens: {} });
 
     camadaTokens.innerHTML = "";
 
@@ -416,7 +409,7 @@ const camadaImagens = document.getElementById("imagens-mapa");
 let idsImagensNaTela = [];
 
 function desenharImagens() {
-    const imagens = lerDoStorage(chave("imagensMestre"), []);
+    const imagens = Armazenamento.ler("imagens", []);
     const idsAgora = [];
 
     camadaImagens.innerHTML = "";
@@ -456,28 +449,17 @@ imagemMapa.addEventListener("load", ajustarNaTela);
 // Se a janela mudar de tamanho (ex.: tela cheia com F11), reencaixa
 window.addEventListener("resize", ajustarNaTela);
 
-// O evento "storage" avisa quando OUTRA janela (o mapa do mestre)
-// muda o localStorage. É assim que esta tela acompanha a batalha.
-window.addEventListener("storage", function(event) {
+// É assim que esta tela acompanha a batalha: o Armazenamento avisa
+// quando o mapa do mestre muda alguma coisa, e redesenhamos.
+Armazenamento.quandoMudar("batalha", desenharTokens);
+Armazenamento.quandoMudar("personagens", desenharTokens);
+Armazenamento.quandoMudar("mapa", carregarMapa);
+Armazenamento.quandoMudar("imagens", desenharImagens);
 
-    if (event.key === chave("estadoBatalha") || event.key === chave("personagens")) {
-        desenharTokens();
-    }
-
-    if (event.key === chave("mapaPersonalizado")) {
-        carregarMapa();
-    }
-
-    if (event.key === chave("imagensMestre")) {
-        desenharImagens();
-    }
-
-    // Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia
-    if (event.key === "anuncio" && event.newValue) {
-        exibirAnuncio(
-            document.getElementById("anuncio-jogadores"),
-            JSON.parse(event.newValue)
-        );
+// Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia
+Armazenamento.quandoMudar("anuncio", function(anuncio) {
+    if (anuncio) {
+        exibirAnuncio(document.getElementById("anuncio-jogadores"), anuncio);
     }
 });
 

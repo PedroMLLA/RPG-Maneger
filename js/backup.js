@@ -1,18 +1,14 @@
-// Backup da campanha: exporta tudo o que está no localStorage para um
-// arquivo .json, e importa esse arquivo de volta.
+// Backup da campanha: exporta os dados para um arquivo .json,
+// e importa esse arquivo de volta.
 // Assim os dados não dependem só do navegador.
-
+//
 // O backup é da CAMPANHA ATUAL: exporta os dados dela e, ao importar,
 // substitui só os dados dela (as outras campanhas não mudam).
-// Por isso as chaves passam pela função chave() (campanha-atual.js).
-//
-// O que entra no backup.
+// Quem lê e grava é o Armazenamento (armazenamento.js). Entram:
 //  - personagens: fichas, inventários, habilidades, HP... (de todos)
 //  - estadoBatalha: quem está no mapa, posições e de quem é a vez
 //  - mapaPersonalizado: a imagem do mapa enviado (se houver)
 //  - imagensMestre: as imagens da aba "Imagens" (e onde estão no mapa)
-const CHAVES_JSON = ["personagens", "estadoBatalha", "imagensMestre"];
-const CHAVE_MAPA = "mapaPersonalizado";
 
 // Serve para reconhecer que o arquivo é mesmo um backup nosso
 const NOME_DO_APP = "RPG Manager";
@@ -21,22 +17,11 @@ const VERSAO_DO_BACKUP = 1;
 
 // Junta tudo num único objeto
 function montarBackup() {
-    const dados = {};
-
-    for (const nome of CHAVES_JSON) {
-        const texto = localStorage.getItem(chave(nome));
-
-        // Guardamos já convertido para objeto: o arquivo fica legível
-        dados[nome] = texto ? JSON.parse(texto) : null;
-    }
-
-    dados[CHAVE_MAPA] = localStorage.getItem(chave(CHAVE_MAPA));
-
     return {
         app: NOME_DO_APP,
         versao: VERSAO_DO_BACKUP,
         criadoEm: new Date().toISOString(),
-        dados: dados
+        dados: Armazenamento.exportarCampanha()
     };
 }
 
@@ -79,45 +64,10 @@ function exportarCampanha() {
 }
 
 
-// Grava os dados de um backup no localStorage.
-// Se não couber, desfaz tudo e devolve false.
+// Grava os dados de um backup na campanha atual.
+// Se não couber, o Armazenamento desfaz tudo e devolve false.
 function aplicarBackup(backup) {
-
-    // Guarda como está agora, para poder voltar atrás se der erro
-    const antes = {};
-    for (const nome of [...CHAVES_JSON, CHAVE_MAPA]) {
-        antes[nome] = localStorage.getItem(chave(nome));
-    }
-
-    // Escreve um valor, ou apaga a chave se o valor for vazio
-    const gravar = function(nome, texto) {
-        if (texto === null || texto === undefined) {
-            localStorage.removeItem(chave(nome));
-        } else {
-            localStorage.setItem(chave(nome), texto);
-        }
-    };
-
-    try {
-        for (const nome of CHAVES_JSON) {
-            const valor = backup.dados[nome];
-            gravar(nome, valor ? JSON.stringify(valor) : null);
-        }
-
-        gravar(CHAVE_MAPA, backup.dados[CHAVE_MAPA]);
-
-        return true;
-
-    } catch (erro) {
-        console.error(erro);
-
-        // Volta tudo como estava
-        for (const nome in antes) {
-            gravar(nome, antes[nome]);
-        }
-
-        return false;
-    }
+    return Armazenamento.importarCampanha(backup.dados);
 }
 
 

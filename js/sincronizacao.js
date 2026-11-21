@@ -1,14 +1,9 @@
 // Sincronização com as outras janelas (Painel do Mestre).
-// O evento "storage" avisa quando OUTRA janela muda o localStorage.
+// O Armazenamento avisa quando OUTRA janela muda os dados.
 
-window.addEventListener("storage", function(event) {
+Armazenamento.quandoMudar("personagens", function(personagensNovos) {
 
-    if (event.key !== chave("personagens")) {
-        return;
-    }
-
-    const personagensAtualizados =
-        JSON.parse(event.newValue) || {};
+    const personagensAtualizados = personagensNovos || {};
 
     for (const id in personagensAtualizados) {
 
@@ -69,14 +64,8 @@ window.addEventListener("storage", function(event) {
 });
 
 
-window.addEventListener("storage", function(event) {
-
-    if (event.key !== "inimigoParaMapa") {
-        return;
-    }
-
-    // O Mestre manda só { id, momento }; os dados vêm de "personagens"
-    const pedido = JSON.parse(event.newValue);
+// O Mestre manda só { id, momento }; os dados vêm de "personagens"
+Armazenamento.quandoMudar("inimigoParaMapa", function(pedido) {
 
     if (!pedido) {
         return;
@@ -84,7 +73,7 @@ window.addEventListener("storage", function(event) {
 
     if (!personagens[pedido.id]) {
         const salvos =
-            JSON.parse(localStorage.getItem(chave("personagens"))) || {};
+            Armazenamento.ler("personagens", {});
 
         personagens[pedido.id] = salvos[pedido.id];
     }

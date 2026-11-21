@@ -2,8 +2,8 @@
 // como "Nero está morrendo". Usado pela tela do mestre (que publica)
 // e pela visão dos jogadores (que mostra em tela cheia).
 
-// Grava o anúncio no localStorage. A visão dos jogadores recebe pelo
-// evento "storage". O "momento" garante que o evento dispare mesmo se
+// Grava o anúncio pelo Armazenamento. A visão dos jogadores recebe pelo
+// quandoMudar("anuncio"). O "momento" garante que o aviso chegue mesmo se
 // o mesmo texto for anunciado duas vezes.
 function publicarAnuncio(tipo, titulo, texto, duracao) {
     const anuncio = {
@@ -15,7 +15,7 @@ function publicarAnuncio(tipo, titulo, texto, duracao) {
     };
 
     try {
-        localStorage.setItem("anuncio", JSON.stringify(anuncio));
+        Armazenamento.salvar("anuncio", anuncio);
     } catch (erro) {
         console.error(erro);
     }

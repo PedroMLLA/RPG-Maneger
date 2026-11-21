@@ -1,5 +1,5 @@
 // Painel do Mestre (mestre.html): criar inimigos e controlar a vida deles.
-// Conversa com o mapa pelo localStorage (evento "storage").
+// Conversa com o mapa pelo Armazenamento (armazenamento.js).
 
 const listaInimigosMestre =
     document.getElementById("lista-inimigos-mestre");
@@ -7,9 +7,7 @@ const listaInimigosMestre =
 
 // Confere no estado da batalha (salvo pelo mapa) se o token está lá
 function estaNoMapa(id) {
-    const estado = JSON.parse(
-        localStorage.getItem(chave("estadoBatalha"))
-    ) || { tokens: {} };
+    const estado = Armazenamento.ler("batalha", { tokens: {} });
 
     return Boolean(estado.tokens[id]);
 }
@@ -18,9 +16,7 @@ function atualizarInimigos() {
 
     listaInimigosMestre.innerHTML = "";
 
-    const personagensSalvos = JSON.parse(
-        localStorage.getItem(chave("personagens"))
-    ) || {};
+    const personagensSalvos = Armazenamento.ler("personagens", {});
 
 
     for (const id in personagensSalvos) {
@@ -107,13 +103,10 @@ function atualizarInimigos() {
             // (inclusive a imagem), então não precisamos copiá-los de novo.
             // O "momento" muda a cada clique, garantindo que o evento
             // "storage" dispare mesmo se for o mesmo inimigo de antes.
-            localStorage.setItem(
-                "inimigoParaMapa",
-                JSON.stringify({
+            Armazenamento.salvar("inimigoParaMapa", {
                     id: id,
                     momento: Date.now()
-                })
-            );
+                });
 
             botaoAdicionarMapa.textContent = "Já está no mapa";
             botaoAdicionarMapa.disabled = true;
@@ -146,10 +139,7 @@ function atualizarInimigos() {
             personagensSalvos[id] = personagem;
 
 
-            localStorage.setItem(
-                chave("personagens"),
-                JSON.stringify(personagensSalvos)
-            );
+            Armazenamento.salvar("personagens", personagensSalvos);
 
 
             atualizarInimigos();
@@ -174,10 +164,7 @@ function atualizarInimigos() {
             personagensSalvos[id] = personagem;
 
 
-            localStorage.setItem(
-                chave("personagens"),
-                JSON.stringify(personagensSalvos)
-            );
+            Armazenamento.salvar("personagens", personagensSalvos);
 
 
             atualizarInimigos();
@@ -190,10 +177,7 @@ function atualizarInimigos() {
 
         delete personagensSalvos[id];
 
-        localStorage.setItem(
-        chave("personagens"),
-        JSON.stringify(personagensSalvos)
-    );
+        Armazenamento.salvar("personagens", personagensSalvos);
 
         atualizarInimigos();
 
@@ -251,9 +235,7 @@ const id = nome.toLowerCase().replaceAll(" ", "-");
 
 function salvarInimigo(imagem) {
 
-const personagensSalvos = JSON.parse(
-    localStorage.getItem(chave("personagens"))
-) || {};
+const personagensSalvos = Armazenamento.ler("personagens", {});
 
 personagensSalvos[id] = {
     nome: nome,
@@ -267,10 +249,7 @@ personagensSalvos[id] = {
 };
 
 try {
-    localStorage.setItem(
-        chave("personagens"),
-        JSON.stringify(personagensSalvos)
-    );
+    Armazenamento.salvar("personagens", personagensSalvos);
 } catch (erro) {
     alert("Sem espaço para salvar. Tente uma imagem menor.");
     console.error(erro);
@@ -298,12 +277,8 @@ salvarInimigo(null);
 atualizarInimigos();
 
 
-window.addEventListener("storage", function(event) {
-
-    // "estadoBatalha" muda quando um token entra/sai do mapa
-    // (inclusive no botão Nova batalha), e aí os botões se atualizam.
-    if (event.key === chave("personagens") || event.key === chave("estadoBatalha")) {
-        atualizarInimigos();
-    }
-
-});
+// Quando o mapa muda os personagens ou a batalha, a lista se atualiza.
+// A batalha muda quando um token entra/sai do mapa (inclusive no
+// botão Nova batalha), e aí os botões "Adicionar ao mapa" se acertam.
+Armazenamento.quandoMudar("personagens", atualizarInimigos);
+Armazenamento.quandoMudar("batalha", atualizarInimigos);

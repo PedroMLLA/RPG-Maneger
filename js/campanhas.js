@@ -2,7 +2,7 @@
 // Passar o mouse faz a campanha crescer e mostrar o nome;
 // clicar escolhe a campanha e abre o mapa.
 //
-// localStorage:
+// Dados guardados (pelo Armazenamento):
 //   "campanhas"     → [ { id, nome, imagem }, ... ]
 //   "campanhaAtual" → id da campanha escolhida
 
@@ -27,7 +27,7 @@ const CAMPANHAS_PADRAO = [
     { id: "demetria", nome: "Demetria", imagem: "mapas/demetria.jfif" }
 ];
 
-let campanhas = JSON.parse(localStorage.getItem("campanhas")) || CAMPANHAS_PADRAO;
+let campanhas = Armazenamento.ler("campanhas", CAMPANHAS_PADRAO);
 
 // Imagem escolhida na janela de nova campanha (já otimizada)
 let imagemNova = null;
@@ -35,7 +35,7 @@ let imagemNova = null;
 
 function salvarCampanhas() {
     try {
-        localStorage.setItem("campanhas", JSON.stringify(campanhas));
+        Armazenamento.salvar("campanhas", campanhas);
         return true;
     } catch (erro) {
         console.error(erro);
@@ -139,7 +139,7 @@ function criarItemCampanha(campanha) {
 }
 
 function escolherCampanha(campanha) {
-    localStorage.setItem("campanhaAtual", campanha.id);
+    Armazenamento.salvar("campanhaAtual", campanha.id);
     window.location.href = "mapa.html";
 }
 
@@ -152,14 +152,12 @@ function excluirCampanha(campanha) {
         return outra.id !== campanha.id;
     });
 
-    // Apaga os dados guardados dessa campanha (campanha-atual.js)
-    for (const nome of DADOS_DA_CAMPANHA) {
-        localStorage.removeItem(chave(nome, campanha.id));
-    }
+    // Apaga os dados guardados dessa campanha (armazenamento.js)
+    Armazenamento.apagarCampanha(campanha.id);
 
     // Se era a campanha escolhida, ninguém fica escolhido
-    if (localStorage.getItem("campanhaAtual") === campanha.id) {
-        localStorage.removeItem("campanhaAtual");
+    if (Armazenamento.ler("campanhaAtual") === campanha.id) {
+        Armazenamento.apagar("campanhaAtual");
     }
 
     salvarCampanhas();

@@ -47,7 +47,7 @@ if (!campanhaAtual) {
 // Usa o último mapa enviado NESTA campanha; se nunca enviaram nenhum,
 // abre o mapa padrão dela (veja campanha-atual.js).
 const mapaPersonalizado =
-    localStorage.getItem(chave("mapaPersonalizado"));
+    Armazenamento.ler("mapa");
 
 if (mapaPersonalizado) {
     imagemMapa.src = mapaPersonalizado;
@@ -78,7 +78,7 @@ arquivoMapa.addEventListener("change", function() {
         atualizarMapa();
 
         try {
-            localStorage.setItem(chave("mapaPersonalizado"), imagemOtimizada);
+            Armazenamento.salvar("mapa", imagemOtimizada);
         } catch (erro) {
             alert("O mapa foi aberto, mas é grande demais para ficar salvo.");
             console.error(erro);

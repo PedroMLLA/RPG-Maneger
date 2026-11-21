@@ -4,7 +4,7 @@
 // 1) Junta o que estava salvo (HP atual, fichas, personagens criados,
 //    inimigos) com os personagens padrão de dados.js.
 const personagensSalvos =
-    JSON.parse(localStorage.getItem(chave("personagens"))) || {};
+    Armazenamento.ler("personagens", {});
 
 for (const id in personagensSalvos) {
     personagens[id] = {
@@ -33,7 +33,7 @@ for (const id in personagens) {
 //    Lemos o estado INTEIRO antes do laço, porque cada criarPersonagem()
 //    salva de novo e sobrescreveria o que ainda não foi restaurado.
 const estadoSalvo =
-    JSON.parse(localStorage.getItem(chave("estadoBatalha"))) || { tokens: {}, turnoAtual: 0 };
+    Armazenamento.ler("batalha", { tokens: {}, turnoAtual: 0 });
 
 for (const id in estadoSalvo.tokens) {
     const personagem = personagens[id];

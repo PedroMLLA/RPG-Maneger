@@ -51,7 +51,7 @@ function salvarEstadoBatalha() {
     };
 
     try {
-        localStorage.setItem(chave("estadoBatalha"), JSON.stringify(estado));
+        Armazenamento.salvar("batalha", estado);
     } catch (erro) {
         console.error(erro);
     }

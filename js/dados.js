@@ -45,12 +45,12 @@ const idsFixos = ["nero", "shin", "jotton", "calisto"];
 // Salva UM personagem sem apagar o que a janela do Mestre salvou.
 function salvarPersonagemNoStorage(id) {
     const salvos =
-        JSON.parse(localStorage.getItem(chave("personagens"))) || {};
+        Armazenamento.ler("personagens", {});
 
     salvos[id] = personagens[id];
 
     try {
-        localStorage.setItem(chave("personagens"), JSON.stringify(salvos));
+        Armazenamento.salvar("personagens", salvos);
     } catch (erro) {
         alert("Sem espaço para salvar. Tente uma imagem menor.");
         console.error(erro);

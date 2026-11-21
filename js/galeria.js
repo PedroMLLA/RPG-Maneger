@@ -18,7 +18,7 @@ const opcaoTirarImagem = document.getElementById("opcao-tirar-imagem");
 const LARGURA_INICIAL = 300;
 const LARGURA_MINIMA = 40;
 
-let imagensMestre = JSON.parse(localStorage.getItem(chave("imagensMestre"))) || [];
+let imagensMestre = Armazenamento.ler("imagens", []);
 
 // Qual imagem abriu o menu do botão direito
 let idImagemDoMenu = null;
@@ -27,7 +27,7 @@ let idImagemDoMenu = null;
 // Salva a lista inteira. Se não couber no navegador, avisa e devolve false.
 function salvarImagens() {
     try {
-        localStorage.setItem(chave("imagensMestre"), JSON.stringify(imagensMestre));
+        Armazenamento.salvar("imagens", imagensMestre);
         return true;
     } catch (erro) {
         console.error(erro);
