@@ -202,6 +202,9 @@ function desenharTokens() {
 
         vidaDoTokenAntes[id] = personagem.hp;
 
+        // Para achar este token quando chegar um movimento ao vivo
+        boneco.dataset.id = id;
+
         boneco.style.left = `${posicao.x}px`;
         boneco.style.top = `${posicao.y}px`;
 
@@ -599,6 +602,17 @@ Armazenamento.quandoMudar("batalha", desenharTokens);
 Armazenamento.quandoMudar("personagens", desenharTokens);
 Armazenamento.quandoMudar("mapa", carregarMapa);
 Armazenamento.quandoMudar("imagens", desenharImagens);
+
+// O mestre está arrastando um token: move só ele, sem redesenhar tudo.
+// (CSS.escape protege o seletor caso o id tenha algum caractere estranho.)
+Armazenamento.quandoChegarAoVivo("token", function(dados) {
+    const boneco = camadaTokens.querySelector(`[data-id="${CSS.escape(dados.id)}"]`);
+
+    if (boneco) {
+        boneco.style.left = `${dados.x}px`;
+        boneco.style.top = `${dados.y}px`;
+    }
+});
 
 // Anúncio novo do mestre (ex.: "Nero está morrendo"): tela cheia.
 // Anúncio velho (ex.: baixado de novo ao abrir a campanha) não aparece.

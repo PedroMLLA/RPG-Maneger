@@ -214,7 +214,7 @@ function criarPersonagem(id, letra, posicaoX, posicaoY, tipo, tamanho) {
     personagensCriados[id] = boneco;
     atualizarIniciativa();
 
-    tornarArrastavel(boneco);
+    tornarArrastavel(boneco, id);
 
     // Clique: abre o painel de vida (a sanidade só aparece se o personagem tiver).
     boneco.addEventListener("click", function(event) {
@@ -257,10 +257,24 @@ removerPersonagem.addEventListener("click", function() {
     painelPersonagem.style.display = "none";
 });
 
-function tornarArrastavel(boneco) {
+// Avisa os jogadores no máximo a cada 50 ms (20 vezes por segundo).
+// O mouse dispara "pointermove" bem mais que isso, e mandar tudo
+// gastaria internet à toa (e o Supabase tem limite de mensagens).
+const INTERVALO_AO_VIVO = 50;
+
+function avisarPosicaoAoVivo(boneco, id) {
+    Armazenamento.avisarAoVivo("token", {
+        id: id,
+        x: parseFloat(boneco.style.left),
+        y: parseFloat(boneco.style.top)
+    });
+}
+
+function tornarArrastavel(boneco, id) {
     let arrastandoBoneco = false;
     let mouseXBoneco = 0;
     let mouseYBoneco = 0;
+    let ultimoAviso = 0;
 
     boneco.addEventListener("pointerdown", function(event) {
         // Impede o mapa de começar a ser arrastado junto
@@ -295,12 +309,23 @@ function tornarArrastavel(boneco) {
 
         mouseXBoneco = event.clientX;
         mouseYBoneco = event.clientY;
+
+        // Os jogadores veem o token andando, sem esperar soltar
+        const agora = Date.now();
+
+        if (agora - ultimoAviso >= INTERVALO_AO_VIVO) {
+            ultimoAviso = agora;
+            avisarPosicaoAoVivo(boneco, id);
+        }
     });
 
     document.addEventListener("pointerup", function() {
         // Só salva se ESTE token estava sendo arrastado
         if (arrastandoBoneco) {
             arrastandoBoneco = false;
+
+            // A posição final na hora; o banco confirma logo depois
+            avisarPosicaoAoVivo(boneco, id);
             salvarEstadoBatalha();
         }
     });

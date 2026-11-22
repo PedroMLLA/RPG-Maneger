@@ -2216,6 +2216,10 @@ body.visao-jogadores {
 /* Os jogadores só olham: nada de arrastar nem brilho ao passar o mouse */
 .visao-jogadores .boneco {
     cursor: default;
+
+    /* O mestre manda a posição 20 vezes por segundo (a cada 50 ms).
+       Deslizar por 80 ms entre uma e outra deixa o movimento liso. */
+    transition: left 80ms linear, top 80ms linear, filter var(--rapido);
 }
 
 .visao-jogadores .boneco:hover {

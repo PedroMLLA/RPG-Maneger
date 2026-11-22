@@ -226,7 +226,65 @@ async function receberDoBanco(linha) {
 }
 
 
+// ----- Ao vivo (Broadcast) -----
+// Para coisas que mudam MUITAS vezes por segundo, como um token sendo
+// arrastado. Em vez de gravar no banco e esperar ele avisar, a mensagem
+// vai direto para quem está olhando, e nada é guardado. O valor final
+// continua sendo salvo no banco do jeito de sempre (Armazenamento.salvar).
+//
+// Dois caminhos ao mesmo tempo:
+//   - Supabase Broadcast: outros aparelhos (o celular do jogador)
+//   - BroadcastChannel do navegador: outras janelas DESTE computador
+//     (a Visão dos Jogadores aberta na TV pelo botão do mapa)
+
+let canalTempoReal = null;
+let canalConectado = false;
+
+const canalLocal = "BroadcastChannel" in window
+    ? new BroadcastChannel(`ao-vivo-${idCampanhaAtual}`)
+    : null;
+
+const ouvintesAoVivo = {};
+
+function receberAoVivo(mensagem) {
+    for (const funcao of ouvintesAoVivo[mensagem.evento] || []) {
+        funcao(mensagem.dados);
+    }
+}
+
+if (canalLocal) {
+    canalLocal.addEventListener("message", function(event) {
+        receberAoVivo(event.data);
+    });
+}
+
+
 const Armazenamento = {
+
+    // Manda uma mensagem ao vivo (ex.: "token", { id, x, y }).
+    // Quem mandou não recebe de volta.
+    avisarAoVivo(evento, dados) {
+        const mensagem = { evento, dados };
+
+        if (canalLocal) {
+            canalLocal.postMessage(mensagem);
+        }
+
+        // Só depois de conectado: antes disso, as mensagens ficariam
+        // presas numa fila e chegariam todas atrasadas de uma vez
+        if (canalTempoReal && canalConectado) {
+            canalTempoReal.send({
+                type: "broadcast",
+                event: "ao-vivo",
+                payload: mensagem
+            });
+        }
+    },
+
+    // Chama "funcao(dados)" quando chegar uma mensagem ao vivo desse evento
+    quandoChegarAoVivo(evento, funcao) {
+        (ouvintesAoVivo[evento] || (ouvintesAoVivo[evento] = [])).push(funcao);
+    },
 
     // Liga a escuta do banco para a campanha atual. As páginas que
     // acompanham a batalha (mapa, Painel do Mestre) chamam uma vez.
@@ -235,8 +293,11 @@ const Armazenamento = {
             return;
         }
 
-        clienteSupabase
+        canalTempoReal = clienteSupabase
             .channel(`campanha-${idCampanhaAtual}`)
+            .on("broadcast", { event: "ao-vivo" }, function(mensagem) {
+                receberAoVivo(mensagem.payload);
+            })
             .on(
                 "postgres_changes",
                 {
@@ -252,6 +313,8 @@ const Armazenamento = {
                 }
             )
             .subscribe(function(estado) {
+                canalConectado = estado === "SUBSCRIBED";
+
                 if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") {
                     console.error("Tempo real: não foi possível conectar.", estado);
                 }
