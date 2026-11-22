@@ -27,7 +27,16 @@ botaoIniciativa.addEventListener("click", function() {
 
 // Guarda quem está no mapa, onde cada token está e de quem é a vez.
 // Fica numa chave separada ("estadoBatalha") dos dados dos personagens.
+// true enquanto aplicamos uma batalha que veio de OUTRA tela
+// (sincronizacao.js). Aí não salvamos: ela já está salva, e salvar de
+// novo faria as duas telas ficarem se reenviando a mesma coisa.
+let aplicandoBatalhaDeFora = false;
+
 function salvarEstadoBatalha() {
+    if (aplicandoBatalhaDeFora) {
+        return;
+    }
+
     const tokens = {};
 
     for (const id in personagensCriados) {

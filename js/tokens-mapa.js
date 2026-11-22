@@ -287,6 +287,10 @@ function tornarArrastavel(boneco, id) {
 
         arrastandoBoneco = true;
 
+        // Avisa o sincronizacao.js: enquanto estamos arrastando, posições
+        // vindas de outra tela não mexem neste token
+        boneco.dataset.arrastando = "sim";
+
         mouseXBoneco = event.clientX;
         mouseYBoneco = event.clientY;
     });
@@ -323,6 +327,7 @@ function tornarArrastavel(boneco, id) {
         // Só salva se ESTE token estava sendo arrastado
         if (arrastandoBoneco) {
             arrastandoBoneco = false;
+            delete boneco.dataset.arrastando;
 
             // A posição final na hora; o banco confirma logo depois
             avisarPosicaoAoVivo(boneco, id);

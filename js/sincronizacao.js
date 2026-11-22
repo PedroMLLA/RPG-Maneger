@@ -93,3 +93,88 @@ Armazenamento.quandoMudar("inimigoParaMapa", function(pedido) {
         tamanhoEmPixels(inimigo.tamanho)
     );
 });
+
+
+// ----- Batalha mudou em OUTRA tela do mestre -----
+// Ex.: o mestre abriu o mapa no PC e no celular. O que um faz (mover,
+// pôr ou tirar token, passar o turno) aparece no outro.
+Armazenamento.quandoMudar("batalha", function(estado) {
+    const tokens = (estado && estado.tokens) || {};
+
+    // Enquanto aplicamos, salvarEstadoBatalha() não salva (veja iniciativa.js)
+    aplicandoBatalhaDeFora = true;
+
+    try {
+        // Tokens que saíram do mapa na outra tela
+        for (const id in personagensCriados) {
+            if (!tokens[id]) {
+                personagensCriados[id].remove();
+                delete personagensCriados[id];
+            }
+        }
+
+        for (const id in tokens) {
+            const posicao = tokens[id];
+
+            // Já está aqui: só acerta a posição (menos se estamos arrastando ele)
+            if (personagensCriados[id]) {
+                moverTokenDeFora(id, posicao.x, posicao.y);
+                continue;
+            }
+
+            // Personagem que esta tela ainda não conhece (ex.: inimigo novo):
+            // pega do que está salvo
+            if (!personagens[id]) {
+                personagens[id] = Armazenamento.ler("personagens", {})[id];
+            }
+
+            const personagem = personagens[id];
+
+            if (!personagem) {
+                continue;
+            }
+
+            criarPersonagem(
+                id,
+                personagem.nome.charAt(0).toUpperCase(),
+                posicao.x,
+                posicao.y,
+                personagem.tipo || "player",
+                tamanhoEmPixels(personagem.tamanho)
+            );
+        }
+
+        turnoAtual = (estado && estado.turnoAtual) || 0;
+        atualizarIniciativa();
+
+    } finally {
+        // "finally" roda mesmo se der erro no meio: nunca fica travado em true
+        aplicandoBatalhaDeFora = false;
+    }
+});
+
+function moverTokenDeFora(id, x, y) {
+    const boneco = personagensCriados[id];
+
+    if (boneco && !boneco.dataset.arrastando) {
+        boneco.style.left = `${x}px`;
+        boneco.style.top = `${y}px`;
+    }
+}
+
+// A outra tela está arrastando um token agora (mensagem ao vivo)
+Armazenamento.quandoChegarAoVivo("token", function(dados) {
+    moverTokenDeFora(dados.id, dados.x, dados.y);
+});
+
+
+// ----- Mapa e galeria mudaram em OUTRA tela -----
+Armazenamento.quandoMudar("mapa", function(endereco) {
+    imagemMapa.src = endereco || mapaPadraoDaCampanha();
+});
+
+Armazenamento.quandoMudar("imagens", function(lista) {
+    imagensMestre = lista || [];
+    desenharGaleria();
+    desenharImagensNoMapa();
+});
