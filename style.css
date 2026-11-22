@@ -665,6 +665,42 @@ header h1 .marca,
     background: var(--destaque);
 }
 
+/* Personagem criado pelo mestre: nome + × lado a lado */
+.linha-personagem {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+#barra-lateral .linha-personagem .botao-nome {
+    flex: 1;
+    min-width: 0;          /* deixa o nome encolher em vez de empurrar o × */
+    margin-bottom: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#barra-lateral .linha-personagem .excluir-personagem {
+    flex: none;
+    width: 34px;
+    margin-bottom: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 16px;
+    color: var(--texto-suave);
+}
+
+#barra-lateral .linha-personagem .excluir-personagem::before {
+    display: none;         /* sem a bolinha dos nomes */
+}
+
+#barra-lateral .linha-personagem .excluir-personagem:hover {
+    color: var(--destaque-forte);
+    border-color: var(--destaque);
+    transform: none;
+}
+
 /* Botões de backup da campanha */
 #acoes-campanha {
     display: flex;

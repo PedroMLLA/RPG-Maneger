@@ -3,7 +3,13 @@
 
 Armazenamento.quandoMudar("personagens", function(personagensNovos) {
 
-    const personagensAtualizados = personagensNovos || {};
+    // Sem dados (algo deu errado no caminho): não mexe em nada. Sem isso,
+    // a parte de "excluídos" lá embaixo apagaria todo mundo da tela.
+    if (!personagensNovos) {
+        return;
+    }
+
+    const personagensAtualizados = personagensNovos;
 
     for (const id in personagensAtualizados) {
 
@@ -38,16 +44,18 @@ Armazenamento.quandoMudar("personagens", function(personagensNovos) {
         }
     }
 
-    // Inimigo que o Mestre excluiu: some da barra lateral e do mapa.
+    // Personagem ou inimigo excluído em outra tela (o × da barra lateral
+    // ou o Painel do Mestre): some da barra lateral e do mapa.
+    // Os 4 fixos (Nero, Shin...) nunca são excluídos.
     for (const id in personagens) {
 
         const foiExcluido = !personagensAtualizados[id];
 
-        if (!foiExcluido || personagens[id].tipo !== "inimigo") {
+        if (!foiExcluido || idsFixos.includes(id)) {
             continue;
         }
 
-        const botao = document.querySelector(`[data-id="${id}"]`);
+        const botao = document.querySelector(`.linha-personagem[data-id="${CSS.escape(id)}"]`);
 
         if (botao) {
             botao.remove();
