@@ -103,6 +103,26 @@ function otimizarEEnviar(arquivo, callback, tamanhoMaximo) {
     }, tamanhoMaximo);
 }
 
+// Apaga do Storage o arquivo de um endereço (ex.: imagem excluída da galeria).
+// Endereço que não é do nosso Storage (base64, imagem da pasta mapas/...)
+// é ignorado. Se falhar, o arquivo só fica sobrando lá, sem atrapalhar.
+async function apagarImagemDoStorage(endereco) {
+    const marca = "/storage/v1/object/public/imagens/";
+
+    if (!temBanco() || typeof endereco !== "string" || !endereco.includes(marca)) {
+        return;
+    }
+
+    // Tudo depois da marca é o caminho: "<id da campanha>/<nome>.webp"
+    const caminho = decodeURIComponent(endereco.split(marca)[1]);
+
+    const { error } = await clienteSupabase.storage.from("imagens").remove([caminho]);
+
+    if (error) {
+        console.error("Não foi possível apagar a imagem do Storage:", error);
+    }
+}
+
 // Ainda é base64 (de antes do Storage)? Endereços normais começam com "http".
 function ehBase64(src) {
     return typeof src === "string" && src.startsWith("data:");

@@ -15,8 +15,8 @@
 --   - o bucket é "público para ler": quem tem o endereço vê a imagem
 --     (é assim que o <img> do jogador consegue mostrar). Os nomes são
 --     sorteados e longos, então ninguém adivinha o endereço;
---   - só o MESTRE (dono da campanha) envia ou apaga arquivos na pasta
---     da campanha dele;
+--   - só o MESTRE (dono da campanha) envia, lista ou apaga arquivos na
+--     pasta da campanha dele;
 --   - só imagens, de até 5 MB.
 -- =====================================================================
 
@@ -54,6 +54,12 @@ drop policy if exists "mestre envia imagem" on storage.objects;
 create policy "mestre envia imagem" on storage.objects
     for insert to authenticated
     with check (bucket_id = 'imagens' and public.eh_dono_da_pasta(name));
+
+-- Apagar um arquivo pela API também exige poder "ver" a linha dele
+drop policy if exists "mestre vê imagem" on storage.objects;
+create policy "mestre vê imagem" on storage.objects
+    for select to authenticated
+    using (bucket_id = 'imagens' and public.eh_dono_da_pasta(name));
 
 drop policy if exists "mestre troca imagem" on storage.objects;
 create policy "mestre troca imagem" on storage.objects

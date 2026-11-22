@@ -106,6 +106,9 @@ function desenharGaleria() {
 
             salvarImagens();
             desenharGaleria();
+
+            // O arquivo no Storage também (se a imagem estava lá)
+            apagarImagemDoStorage(imagem.src);
         });
 
         miniatura.appendChild(excluir);
