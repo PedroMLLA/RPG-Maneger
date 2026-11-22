@@ -51,7 +51,7 @@ confirmarCriacao.addEventListener("click", function() {
     }
 
     if (arquivo) {
-        otimizarImagem(arquivo, function(imagemOtimizada) {
+        otimizarEEnviar(arquivo, function(imagemOtimizada) {
             salvarPersonagem(imagemOtimizada);
         });
     } else {

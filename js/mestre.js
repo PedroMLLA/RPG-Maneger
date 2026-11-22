@@ -266,7 +266,7 @@ atualizarInimigos();
 }
 
 if (arquivo) {
-otimizarImagem(arquivo, function(imagemOtimizada) {
+otimizarEEnviar(arquivo, function(imagemOtimizada) {
     salvarInimigo(imagemOtimizada);
 });
 } else {

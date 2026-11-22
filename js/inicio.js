@@ -108,3 +108,64 @@ atualizarIniciativa();
 
 // 6) Tempo real (V3): mudanças feitas em outro aparelho chegam na hora
 Armazenamento.ligarTempoReal();
+
+// 7) Imagens de antes do Storage (ainda em base64 dentro dos dados):
+//    envia cada uma como arquivo e troca pelo endereço. Roda sempre que
+//    o mapa abre, mas depois da primeira vez não acha mais nada para fazer.
+//    "async" deixa usar "await": espera cada envio sem travar a tela.
+async function migrarImagensParaStorage() {
+    if (!temBanco()) {
+        return;
+    }
+
+    // Mapa
+    const mapaAntigo = Armazenamento.ler("mapa");
+
+    if (ehBase64(mapaAntigo)) {
+        const endereco = await enviarImagemParaStorage(mapaAntigo);
+
+        // Deu errado: para aqui e tenta de novo na próxima vez que abrir
+        if (ehBase64(endereco)) {
+            return;
+        }
+
+        // Só troca se o mestre não escolheu OUTRO mapa enquanto enviava
+        if (Armazenamento.ler("mapa") === mapaAntigo) {
+            Armazenamento.salvar("mapa", endereco);
+        }
+    }
+
+    // Galeria (imagensMestre vem do galeria.js)
+    for (const imagem of imagensMestre) {
+        if (!ehBase64(imagem.src)) {
+            continue;
+        }
+
+        const endereco = await enviarImagemParaStorage(imagem.src);
+
+        if (ehBase64(endereco)) {
+            return;
+        }
+
+        imagem.src = endereco;
+        salvarImagens();
+    }
+
+    // Imagens dos personagens e inimigos
+    for (const id in personagens) {
+        if (!ehBase64(personagens[id].imagem)) {
+            continue;
+        }
+
+        const endereco = await enviarImagemParaStorage(personagens[id].imagem);
+
+        if (ehBase64(endereco)) {
+            return;
+        }
+
+        personagens[id].imagem = endereco;
+        salvarPersonagemNoStorage(id);
+    }
+}
+
+migrarImagensParaStorage();

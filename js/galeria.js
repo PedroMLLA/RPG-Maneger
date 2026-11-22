@@ -126,7 +126,7 @@ arquivoImagem.addEventListener("change", function() {
     for (const arquivo of arquivoImagem.files) {
 
         // 1200px: detalhe suficiente para mostrar na TV sem lotar o storage
-        otimizarImagem(arquivo, function(imagemOtimizada) {
+        otimizarEEnviar(arquivo, function(imagemOtimizada) {
             imagensMestre.push({
                 id: `imagem-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                 nome: arquivo.name.replace(/\.[^.]+$/, ""),  // tira a extensão

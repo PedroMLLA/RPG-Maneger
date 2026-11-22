@@ -98,7 +98,7 @@ arquivoMapa.addEventListener("change", function() {
     }
 
     // Mapas precisam de mais detalhe que tokens, então o limite é 2000px.
-    otimizarImagem(arquivo, function(imagemOtimizada) {
+    otimizarEEnviar(arquivo, function(imagemOtimizada) {
         // Quando a imagem nova carregar, o "load" lá embaixo encaixa ela na tela
         imagemMapa.src = imagemOtimizada;
 
