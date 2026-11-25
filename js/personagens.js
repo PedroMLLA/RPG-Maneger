@@ -16,15 +16,37 @@ const sanidadeNovoPersonagem = document.getElementById("sanidade-novo-personagem
 const tipoNovoPersonagem = document.getElementById("tipo-novo-personagem");
 const imagemNovoPersonagem = document.getElementById("imagem-novo-personagem");
 
+const fixoNovoPersonagem = document.getElementById("fixo-novo-personagem");
+const opcaoFixoNovo = document.getElementById("opcao-fixo-novo");
+
+// Inimigo não pode ser fixo: a opção some
+function atualizarOpcaoFixo() {
+    opcaoFixoNovo.hidden = tipoNovoPersonagem.value === "inimigo";
+}
+
+tipoNovoPersonagem.addEventListener("change", atualizarOpcaoFixo);
+
 confirmarCriacao.addEventListener("click", function() {
 
-    const nome = nomeNovoPersonagem.value;
+    const nome = nomeNovoPersonagem.value.trim();
     const hp = Number(hpNovoPersonagem.value);
     const sanidade = Number(sanidadeNovoPersonagem.value);
     const tipo = tipoNovoPersonagem.value;
+    const fixo = tipo !== "inimigo" && fixoNovoPersonagem.checked;
     const arquivo = imagemNovoPersonagem.files[0];
 
+    if (!nome) {
+        alert("Dê um nome para o personagem.");
+        return;
+    }
+
     const id = nome.toLowerCase().replaceAll(" ", "-");
+
+    // Mesmo id = mesmo personagem: criar de novo apagaria o que já existe
+    if (personagens[id]) {
+        alert(`Já existe um personagem chamado "${personagens[id].nome}".`);
+        return;
+    }
 
     function salvarPersonagem(imagem) {
 
@@ -38,14 +60,19 @@ confirmarCriacao.addEventListener("click", function() {
             imagem: imagem
         };
 
+        if (fixo) {
+            personagens[id].fixo = true;
+        }
+
         salvarPersonagemNoStorage(id);
 
-        criarBotaoPersonagem(id);
+        desenharListaPersonagens();
 
         nomeNovoPersonagem.value = "";
         hpNovoPersonagem.value = "";
         sanidadeNovoPersonagem.value = "";
         imagemNovoPersonagem.value = "";
+        fixoNovoPersonagem.checked = false;
 
         formularioPersonagem.style.display = "none";
     }
@@ -60,11 +87,29 @@ confirmarCriacao.addEventListener("click", function() {
 
 });
 
+// Monta as duas listas da barra lateral do zero: os fixos primeiro,
+// depois os outros. Chamada ao abrir o mapa e sempre que alguém é
+// criado, editado ou excluído (aqui ou em outra tela do mestre).
+function desenharListaPersonagens() {
+    document.getElementById("lista-personagens").innerHTML = "";
+    document.getElementById("lista-inimigos").innerHTML = "";
+
+    const ids = Object.keys(personagens).sort(function(a, b) {
+        return ehFixo(b) - ehFixo(a);   // true vale 1 e false vale 0
+    });
+
+    for (const id of ids) {
+        if (personagens[id] && personagens[id].nome) {
+            criarBotaoPersonagem(id);
+        }
+    }
+}
+
 // Cria o botão de um personagem na barra lateral
 // (jogadores em "Personagens", inimigos em "Inimigos").
-// Cada um vira uma "linha": o botão com o nome (põe no mapa) e um ×
-// do lado (exclui). Um botão não pode ficar DENTRO de outro, por isso
-// os dois ficam lado a lado numa div.
+// Cada um vira uma "linha": o botão com o nome (põe no mapa), o ✎
+// (edita) e, para quem não é fixo, o × (exclui). Um botão não pode
+// ficar DENTRO de outro, por isso ficam lado a lado numa div.
 function criarBotaoPersonagem(id) {
     const personagem = personagens[id];
 
@@ -80,21 +125,20 @@ function criarBotaoPersonagem(id) {
 
     linha.appendChild(novoBotao);
 
-    // Os fixos da campanha não têm × (são o grupo principal):
-    // no lugar dele vem o ✎, que edita a vida e a sanidade
-    if (ehFixo(id)) {
-        const editar = document.createElement("button");
-        editar.classList.add("editar-personagem");
-        editar.textContent = "✎";
-        editar.title = `Editar vida e sanidade de ${personagem.nome}`;
+    // ✎: todo mundo pode ser editado
+    const editar = document.createElement("button");
+    editar.classList.add("editar-personagem");
+    editar.textContent = "✎";
+    editar.title = `Editar ${personagem.nome}`;
 
-        editar.addEventListener("click", function() {
-            abrirEditarFixo(id);
-        });
+    editar.addEventListener("click", function() {
+        abrirEditarPersonagem(id);
+    });
 
-        linha.appendChild(editar);
+    linha.appendChild(editar);
 
-    } else {
+    // ×: os fixos não têm (são o grupo principal)
+    if (!ehFixo(id)) {
         const excluir = document.createElement("button");
         excluir.classList.add("excluir-personagem");
         excluir.textContent = "×";
@@ -125,29 +169,55 @@ function criarBotaoPersonagem(id) {
     }
 }
 
-// ----- Editar vida e sanidade de um fixo (o ✎) -----
-// Serve para quando o personagem sobe de nível, por exemplo: muda a
-// vida/sanidade máxima. A atual também pode ser acertada aqui.
+// ----- Editar um personagem (o ✎) -----
+// Nome, imagem, vida, sanidade e se ele é fixo. Serve para quando o
+// personagem sobe de nível, troca de visual, entra ou sai do grupo...
 
-const janelaEditarFixo = document.getElementById("janela-editar-fixo");
-const tituloEditarFixo = document.getElementById("titulo-editar-fixo");
+const janelaEditar = document.getElementById("janela-editar");
+const tituloEditar = document.getElementById("titulo-editar");
+const editarNome = document.getElementById("editar-nome");
+const imagemEditar = document.getElementById("imagem-editar");
+const previaEditar = document.getElementById("previa-editar");
+const iconeEditar = document.getElementById("icone-editar");
 const editarHp = document.getElementById("editar-hp");
 const editarHpMaximo = document.getElementById("editar-hp-maximo");
 const editarSanidade = document.getElementById("editar-sanidade");
 const editarSanidadeMaxima = document.getElementById("editar-sanidade-maxima");
+const editarFixo = document.getElementById("editar-fixo");
+const opcaoFixoEditar = document.getElementById("opcao-fixo-editar");
+const botaoSalvarEditar = document.getElementById("botao-salvar-editar");
 
 // Quem está sendo editado agora
-let idEditandoFixo = null;
+let idEditando = null;
 
-function abrirEditarFixo(id) {
+// Imagem nova escolhida (base64). Só vai para o Storage ao Salvar:
+// se o mestre cancelar, nada sobra lá.
+let imagemNovaEditar = null;
+
+// Mostra uma imagem (ou o ícone, se não houver) no círculo da janela
+function mostrarPreviaEditar(imagem) {
+    previaEditar.hidden = !imagem;
+    iconeEditar.hidden = Boolean(imagem);
+
+    if (imagem) {
+        previaEditar.src = imagem;
+    }
+}
+
+function abrirEditarPersonagem(id) {
     const personagem = personagens[id];
 
     if (!personagem) {
         return;
     }
 
-    idEditandoFixo = id;
-    tituloEditarFixo.textContent = `✎ ${personagem.nome}`;
+    idEditando = id;
+    imagemNovaEditar = null;
+    imagemEditar.value = "";
+
+    tituloEditar.textContent = `✎ ${personagem.nome}`;
+    editarNome.value = personagem.nome;
+    mostrarPreviaEditar(personagem.imagem);
 
     editarHp.value = personagem.hp;
     editarHpMaximo.value = personagem.hpMaximo;
@@ -157,14 +227,30 @@ function abrirEditarFixo(id) {
     editarSanidade.value = temSanidade ? personagem.sanidade : "";
     editarSanidadeMaxima.value = temSanidade ? personagem.sanidadeMaxima : "";
 
-    janelaEditarFixo.style.display = "flex";
-    editarHpMaximo.focus();
+    // Inimigo não pode ser fixo
+    opcaoFixoEditar.hidden = personagem.tipo === "inimigo";
+    editarFixo.checked = ehFixo(id);
+
+    janelaEditar.style.display = "flex";
+    editarNome.focus();
 }
 
-function fecharEditarFixo() {
-    janelaEditarFixo.style.display = "none";
-    idEditandoFixo = null;
+function fecharEditar() {
+    janelaEditar.style.display = "none";
+    idEditando = null;
+    imagemNovaEditar = null;
 }
+
+imagemEditar.addEventListener("change", function() {
+    if (!imagemEditar.files[0]) {
+        return;
+    }
+
+    otimizarImagem(imagemEditar.files[0], function(imagemOtimizada) {
+        imagemNovaEditar = imagemOtimizada;
+        mostrarPreviaEditar(imagemOtimizada);
+    });
+});
 
 // Número de um campo; vazio vira o "padrao".
 // Math.max(0, ...) não deixa ficar negativo.
@@ -176,12 +262,21 @@ function numeroDoCampo(campo, padrao) {
     return Math.max(0, Math.round(Number(campo.value)));
 }
 
-function salvarEditarFixo() {
-    const id = idEditandoFixo;
+// "async" porque a imagem nova precisa terminar de subir antes de salvar
+async function salvarEditar() {
+    const id = idEditando;
     const personagem = personagens[id];
 
     if (!personagem) {
-        fecharEditarFixo();
+        fecharEditar();
+        return;
+    }
+
+    const nome = editarNome.value.trim();
+
+    if (!nome) {
+        alert("Dê um nome para o personagem.");
+        editarNome.focus();
         return;
     }
 
@@ -193,7 +288,45 @@ function salvarEditarFixo() {
         return;
     }
 
+    // Tirar o "fixo" do ÚLTIMO fixo deixaria a campanha sem nenhum.
+    // Aí o site acharia que é uma campanha antiga e traria Nero e cia.
+    const outrosFixos = Object.keys(personagens).filter(function(outro) {
+        return outro !== id && ehFixo(outro);
+    });
+
+    if (ehFixo(id) && !editarFixo.checked && outrosFixos.length === 0) {
+        alert("A campanha precisa de pelo menos um personagem fixo.");
+        return;
+    }
+
+    // Imagem nova: sobe primeiro (o botão fica travado enquanto isso)
+    let imagemNova = null;
+
+    if (imagemNovaEditar) {
+        botaoSalvarEditar.disabled = true;
+        botaoSalvarEditar.textContent = "Enviando...";
+
+        imagemNova = await enviarImagemParaStorage(imagemNovaEditar);
+
+        botaoSalvarEditar.disabled = false;
+        botaoSalvarEditar.textContent = "Salvar";
+
+        // A janela foi fechada (ou trocou de personagem) durante o envio
+        if (idEditando !== id) {
+            apagarImagemDoStorage(imagemNova);
+            return;
+        }
+    }
+
     const vidaAntes = personagem.hp;
+
+    personagem.nome = nome;
+
+    if (imagemNova) {
+        // A antiga sai do Storage (as da pasta do projeto são ignoradas)
+        apagarImagemDoStorage(personagem.imagem);
+        personagem.imagem = imagemNova;
+    }
 
     // Atual vazia = cheia. E nunca passa da máxima.
     personagem.hpMaximo = hpMaximo;
@@ -210,41 +343,53 @@ function salvarEditarFixo() {
         delete personagem.sanidadeMaxima;
     }
 
+    if (personagem.tipo !== "inimigo" && editarFixo.checked) {
+        personagem.fixo = true;
+    } else {
+        delete personagem.fixo;
+    }
+
     // Salva: as outras telas do mestre e os jogadores ficam sabendo
     salvarPersonagemNoStorage(id);
 
-    // Token no mapa: barra de vida, "derrotado"...
+    // Nome, ✎ e × na barra lateral
+    desenharListaPersonagens();
+
+    // Token no mapa: imagem/letra, barra de vida, "derrotado"...
     if (personagensCriados[id]) {
-        atualizarEstadoToken(personagensCriados[id], personagem);
+        trocarAparenciaToken(personagensCriados[id], personagem);
     }
 
-    // O painel de vida estava aberto nele? Mostra os números novos
+    // Nome novo na lista de iniciativa
+    atualizarIniciativa();
+
+    // O painel de vida estava aberto nele? Mostra os dados novos
     if (painelPersonagem.style.display === "block" && idSelecionado === id) {
         abrirPainelPersonagem(id);
     }
 
-    fecharEditarFixo();
+    fecharEditar();
 
     // Caiu para 0 ou voltou de 0: mesma regra do Dano e da Cura
     verificarMorrendo(id, vidaAntes);
     verificarSalvamento(id);
 }
 
-document.getElementById("botao-cancelar-editar-fixo").addEventListener("click", fecharEditarFixo);
-document.getElementById("botao-salvar-editar-fixo").addEventListener("click", salvarEditarFixo);
+document.getElementById("botao-cancelar-editar").addEventListener("click", fecharEditar);
+botaoSalvarEditar.addEventListener("click", salvarEditar);
 
 // Fundo escuro fecha; Enter salva; Esc fecha
-janelaEditarFixo.addEventListener("click", function(event) {
-    if (event.target === janelaEditarFixo) {
-        fecharEditarFixo();
+janelaEditar.addEventListener("click", function(event) {
+    if (event.target === janelaEditar) {
+        fecharEditar();
     }
 });
 
-janelaEditarFixo.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        salvarEditarFixo();
+janelaEditar.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !botaoSalvarEditar.disabled) {
+        salvarEditar();
     } else if (event.key === "Escape") {
-        fecharEditarFixo();
+        fecharEditar();
     }
 });
 

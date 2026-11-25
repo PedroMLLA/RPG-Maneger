@@ -144,6 +144,28 @@ function efeitoCura(boneco, quantidade) {
 
 // Deixa o token com a aparência certa: a imagem do personagem,
 // ou um disco com a inicial do nome quando não há imagem.
+// Token que JÁ está no mapa mudou de nome ou de imagem (✎ da barra
+// lateral): apaga a aparência antiga e monta de novo, sem tirar do lugar.
+function trocarAparenciaToken(boneco, personagem) {
+    boneco.classList.remove("imagem-personagem", "token-inimigo");
+    boneco.style.backgroundImage = "";
+
+    // Limpa a letra (e o contador/ícones, que atualizarEstadoToken recoloca)
+    boneco.textContent = "";
+
+    const tipo = personagem.tipo || "player";
+
+    aplicarVisualToken(
+        boneco,
+        personagem,
+        tipo,
+        tamanhoEmPixels(personagem.tamanho),
+        personagem.nome.charAt(0).toUpperCase()
+    );
+
+    atualizarEstadoToken(boneco, personagem);
+}
+
 function aplicarVisualToken(boneco, personagem, tipo, tamanho, letra) {
 
     boneco.classList.add("boneco");

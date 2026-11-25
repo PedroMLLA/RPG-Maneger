@@ -51,12 +51,19 @@
                 <input type="number" id="sanidade-novo-personagem" placeholder="Sanidade">
                 <label for="imagem-novo-personagem">Imagem:</label>
 
-                    <input type="file" id="imagem-novo-personagem" accept=".png,image/png">
+                    <input type="file" id="imagem-novo-personagem" accept="image/*">
 
                     <select id="tipo-novo-personagem">
                         <option value="player">Jogador</option>
                         <option value="inimigo">Inimigo</option>
                     </select>
+
+                    <!-- Fixo = do grupo principal: sem ×, sempre no topo da lista.
+                         Some quando o tipo é "Inimigo" (personagens.js) -->
+                    <label id="opcao-fixo-novo" class="opcao-fixo">
+                        <input type="checkbox" id="fixo-novo-personagem">
+                        Fixo (grupo principal)
+                    </label>
 
                     <button id="confirmar-criacao">Criar</button>
             </div>
@@ -177,13 +184,25 @@
 </section>
 </main>
     <!-- Janela que abre quando um aliado chega a 0 de vida -->
-    <!-- Editar vida e sanidade de um personagem fixo (✎ na barra lateral) -->
-    <div id="janela-editar-fixo" class="janela-modal">
-        <div class="caixa-inventario caixa-editar-fixo">
+    <!-- Editar um personagem (✎ na barra lateral): nome, imagem,
+         vida, sanidade e se ele é fixo -->
+    <div id="janela-editar" class="janela-modal">
+        <div class="caixa-inventario caixa-editar">
 
-            <h2 id="titulo-editar-fixo">✎ Editar</h2>
+            <h2 id="titulo-editar">✎ Editar</h2>
 
-            <div class="grade-editar-fixo">
+            <div class="topo-editar">
+                <!-- Clicar na foto escolhe outra imagem -->
+                <label class="foto-fixo" title="Trocar imagem">
+                    <img id="previa-editar" alt="" hidden>
+                    <span id="icone-editar">🖼️</span>
+                    <input type="file" id="imagem-editar" accept="image/*" hidden>
+                </label>
+
+                <input type="text" id="editar-nome" placeholder="Nome" maxlength="30">
+            </div>
+
+            <div class="grade-editar">
                 <span></span>
                 <span class="rotulo-coluna">Atual</span>
                 <span class="rotulo-coluna">Máxima</span>
@@ -197,11 +216,17 @@
                 <input type="number" id="editar-sanidade-maxima" min="0" placeholder="—">
             </div>
 
-            <p class="dica-editar-fixo">Sanidade máxima vazia ou 0: o personagem fica sem sanidade.</p>
+            <p class="dica-editar">Sanidade máxima vazia ou 0: o personagem fica sem sanidade.</p>
+
+            <!-- Some para inimigos -->
+            <label id="opcao-fixo-editar" class="opcao-fixo">
+                <input type="checkbox" id="editar-fixo">
+                Fixo (grupo principal, sem o × para excluir)
+            </label>
 
             <div class="acoes-inventario">
-                <button id="botao-cancelar-editar-fixo">Cancelar</button>
-                <button id="botao-salvar-editar-fixo" class="botao-salvar">Salvar</button>
+                <button id="botao-cancelar-editar">Cancelar</button>
+                <button id="botao-salvar-editar" class="botao-salvar">Salvar</button>
             </div>
 
         </div>

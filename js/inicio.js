@@ -85,15 +85,7 @@ function atualizarFichaBase(id, fichaBase) {
 }
 
 // 2) Cria os botões na barra lateral: os fixos primeiro, depois o resto.
-const idsEmOrdem = Object.keys(personagens).sort(function(a, b) {
-    return ehFixo(b) - ehFixo(a);   // true vale 1 e false vale 0
-});
-
-for (const id of idsEmOrdem) {
-    if (personagens[id].nome) {
-        criarBotaoPersonagem(id);
-    }
-}
+desenharListaPersonagens();
 
 // 3) Coloca de volta os tokens que estavam no mapa.
 //    Lemos o estado INTEIRO antes do laço, porque cada criarPersonagem()

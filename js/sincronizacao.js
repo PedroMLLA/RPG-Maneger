@@ -20,6 +20,15 @@ Armazenamento.quandoMudar("personagens", function(personagensNovos) {
 
             // Atualiza o MESMO objeto (em vez de criar outro),
             // assim o personagemSelecionado continua apontando para ele.
+            // Antes, tira os campos que a outra tela apagou (ex.: deixou
+            // de ser fixo, ficou sem sanidade): Object.assign só copia o
+            // que existe, então eles ficariam aqui para sempre.
+            for (const campo in personagens[id]) {
+                if (!(campo in personagensAtualizados[id])) {
+                    delete personagens[id][campo];
+                }
+            }
+
             Object.assign(personagens[id], personagensAtualizados[id]);
 
             // Curado pelo Painel do Mestre: faíscas no token do mapa também
@@ -31,16 +40,15 @@ Armazenamento.quandoMudar("personagens", function(personagensNovos) {
 
         } else {
 
-            // Personagem novo, criado no Mestre: ganha botão na barra lateral.
+            // Personagem novo, criado em outra tela (o botão dele aparece
+            // quando a lista é redesenhada, lá embaixo)
             personagens[id] = personagensAtualizados[id];
-            criarBotaoPersonagem(id);
         }
 
-        // Se está no mapa, atualiza o visual: inimigo com vida zerada
-        // fica "derrotado" (antes ele sumia do mapa; agora o mestre
-        // decide quando remover) e os ícones de condição se atualizam.
+        // Se está no mapa, atualiza o visual: nome/imagem (✎), inimigo
+        // com vida zerada fica "derrotado" e os ícones de condição.
         if (personagensCriados[id]) {
-            atualizarEstadoToken(personagensCriados[id], personagens[id]);
+            trocarAparenciaToken(personagensCriados[id], personagens[id]);
         }
     }
 
@@ -55,19 +63,25 @@ Armazenamento.quandoMudar("personagens", function(personagensNovos) {
             continue;
         }
 
-        const botao = document.querySelector(`.linha-personagem[data-id="${CSS.escape(id)}"]`);
-
-        if (botao) {
-            botao.remove();
-        }
-
         if (personagensCriados[id]) {
             personagensCriados[id].remove();
             delete personagensCriados[id];
-            atualizarIniciativa();
         }
 
         delete personagens[id];
+    }
+
+    // Barra lateral e iniciativa com os nomes, ✎ e × de agora.
+    // A trava (iniciativa.js) faz a iniciativa só se redesenhar, sem
+    // salvar a batalha de novo: quem mudou foi a outra tela.
+    desenharListaPersonagens();
+
+    aplicandoBatalhaDeFora = true;
+
+    try {
+        atualizarIniciativa();
+    } finally {
+        aplicandoBatalhaDeFora = false;
     }
 });
 
