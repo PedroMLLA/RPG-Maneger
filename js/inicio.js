@@ -1,26 +1,47 @@
 // Inicialização da tela do mestre. Este é o ÚLTIMO arquivo carregado:
 // quando ele roda, todas as funções dos outros arquivos já existem.
 
-// 1) Junta o que estava salvo (HP atual, fichas, personagens criados,
-//    inimigos) com os personagens padrão de dados.js.
+// 1) Carrega os personagens da campanha (fixos, criados e inimigos).
 const personagensSalvos =
     Armazenamento.ler("personagens", {});
 
-for (const id in personagensSalvos) {
-    // Guarda a ficha padrão antes de juntar com o que estava salvo
-    const fichaBase = personagens[id];
+// Campanha de ANTES dos fixos por campanha: nenhum personagem marcado
+// como fixo. Ela continua com os 4 de Insurreição, agora marcados.
+// (Campanhas novas sempre têm pelo menos um fixo, então não caem aqui.)
+const temFixos = Object.values(personagensSalvos).some(function(personagem) {
+    return personagem && personagem.fixo;
+});
 
-    personagens[id] = {
-        ...personagens[id],
-        ...personagensSalvos[id]
-    };
+if (!temFixos) {
+    for (const id in fixosAntigos) {
+        personagensSalvos[id] = {
+            ...fixosAntigos[id],
+            ...personagensSalvos[id],
+            tipo: "player",
+            fixo: true
+        };
+    }
 
-    if (idsFixos.includes(id) && fichaBase) {
-        atualizarFichaBase(id, fichaBase);
+    try {
+        Armazenamento.salvar("personagens", personagensSalvos);
+    } catch (erro) {
+        console.error(erro);
     }
 }
 
-// Os 4 principais: vida máxima, sanidade máxima e imagem vêm do dados.js.
+for (const id in personagensSalvos) {
+    if (!personagensSalvos[id]) {
+        continue;
+    }
+
+    personagens[id] = personagensSalvos[id];
+
+    if (ehFixo(id) && fixosAntigos[id]) {
+        atualizarFichaBase(id, fixosAntigos[id]);
+    }
+}
+
+// Os 4 antigos: vida máxima, sanidade máxima e imagem vêm do dados.js.
 // A vida e a sanidade ATUAIS se ajustam ao novo máximo:
 //  - quem estava cheio continua cheio (70/70 vira 78/78)
 //  - quem estava machucado continua com o mesmo valor, sem passar do máximo
@@ -60,23 +81,18 @@ function atualizarFichaBase(id, fichaBase) {
     }
 }
 
-// 2) Garante que os personagens padrão (Nero, Shin...) também estejam
-//    salvos, para a visão dos jogadores conseguir desenhá-los.
-for (const id in personagens) {
-    if (!personagensSalvos[id]) {
-        salvarPersonagemNoStorage(id);
-    }
-}
+// 2) Cria os botões na barra lateral: os fixos primeiro, depois o resto.
+const idsEmOrdem = Object.keys(personagens).sort(function(a, b) {
+    return ehFixo(b) - ehFixo(a);   // true vale 1 e false vale 0
+});
 
-// 3) Recria os botões dos personagens salvos na barra lateral.
-//    Os 4 fixos já têm botão no HTML, então pulamos eles.
-for (const id in personagens) {
-    if (!idsFixos.includes(id) && personagens[id].nome) {
+for (const id of idsEmOrdem) {
+    if (personagens[id].nome) {
         criarBotaoPersonagem(id);
     }
 }
 
-// 4) Coloca de volta os tokens que estavam no mapa.
+// 3) Coloca de volta os tokens que estavam no mapa.
 //    Lemos o estado INTEIRO antes do laço, porque cada criarPersonagem()
 //    salva de novo e sobrescreveria o que ainda não foi restaurado.
 const estadoSalvo =
@@ -102,14 +118,14 @@ for (const id in estadoSalvo.tokens) {
     );
 }
 
-// 5) O turno só é restaurado no fim, com todos os tokens já no mapa
+// 4) O turno só é restaurado no fim, com todos os tokens já no mapa
 turnoAtual = estadoSalvo.turnoAtual || 0;
 atualizarIniciativa();
 
-// 6) Tempo real (V3): mudanças feitas em outro aparelho chegam na hora
+// 5) Tempo real (V3): mudanças feitas em outro aparelho chegam na hora
 Armazenamento.ligarTempoReal();
 
-// 7) Imagens de antes do Storage (ainda em base64 dentro dos dados):
+// 6) Imagens de antes do Storage (ainda em base64 dentro dos dados):
 //    envia cada uma como arquivo e troca pelo endereço. Roda sempre que
 //    o mapa abre, mas depois da primeira vez não acha mais nada para fazer.
 //    "async" deixa usar "await": espera cada envio sem travar a tela.

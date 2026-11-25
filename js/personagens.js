@@ -78,17 +78,21 @@ function criarBotaoPersonagem(id) {
     novoBotao.classList.add("botao-nome");
     novoBotao.textContent = personagem.nome;
 
-    const excluir = document.createElement("button");
-    excluir.classList.add("excluir-personagem");
-    excluir.textContent = "×";
-    excluir.title = `Excluir ${personagem.nome}`;
-
-    excluir.addEventListener("click", function() {
-        excluirPersonagem(id);
-    });
-
     linha.appendChild(novoBotao);
-    linha.appendChild(excluir);
+
+    // Os fixos da campanha não têm × (são o grupo principal)
+    if (!ehFixo(id)) {
+        const excluir = document.createElement("button");
+        excluir.classList.add("excluir-personagem");
+        excluir.textContent = "×";
+        excluir.title = `Excluir ${personagem.nome}`;
+
+        excluir.addEventListener("click", function() {
+            excluirPersonagem(id);
+        });
+
+        linha.appendChild(excluir);
+    }
 
     novoBotao.addEventListener("click", function() {
         criarPersonagem(
@@ -96,7 +100,7 @@ function criarBotaoPersonagem(id) {
             personagens[id].nome.charAt(0).toUpperCase(),
             300,
             200,
-            personagens[id].tipo,
+            personagens[id].tipo || "player",
             tamanhoEmPixels(personagens[id].tamanho)
         );
     });

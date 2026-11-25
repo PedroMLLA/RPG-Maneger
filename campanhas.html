@@ -43,9 +43,9 @@
 
 </main>
 
-    <!-- Janela para criar uma campanha: nome + imagem -->
+    <!-- Janela para criar uma campanha: nome + imagem + personagens fixos -->
     <div id="janela-campanha" class="janela-modal">
-        <div class="caixa-inventario">
+        <div class="caixa-inventario caixa-nova-campanha">
 
             <h2>✦ Nova campanha</h2>
 
@@ -58,6 +58,16 @@
                 </label>
                 <input type="file" id="imagem-campanha" accept="image/*" hidden>
             </div>
+
+            <!-- O grupo principal da campanha (como Nero, Shin, Jotton e
+                 Calisto em Insurreição). Pelo menos um é obrigatório.
+                 As linhas são criadas pelo campanhas.js. -->
+            <h3 class="titulo-fixos">Personagens fixos</h3>
+            <p class="dica-fixos">O grupo principal. Ficam sempre na aba de personagens e não podem ser excluídos.</p>
+
+            <div id="lista-fixos"></div>
+
+            <button id="botao-adicionar-fixo" type="button">+ Adicionar personagem</button>
 
             <div class="acoes-inventario">
                 <button id="botao-cancelar-campanha">Cancelar</button>

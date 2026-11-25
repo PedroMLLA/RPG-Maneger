@@ -163,11 +163,6 @@ botaoCuraSanidade.addEventListener("click", function() {
     salvarPersonagemNoStorage(idSelecionado);
 });
 
-const botaoNero = document.getElementById("botao-nero");
-const botaoShin = document.getElementById("botao-shin");
-const botaoJotton = document.getElementById("botao-jotton");
-const botaoCalisto = document.getElementById("botao-calisto");
-
 const personagensCriados = {};
 
 function criarPersonagem(id, letra, posicaoX, posicaoY, tipo, tamanho) {
@@ -222,22 +217,6 @@ function criarPersonagem(id, letra, posicaoX, posicaoY, tipo, tamanho) {
         abrirPainelPersonagem(id);
     });
 }
-
-botaoNero.addEventListener("click", function() {
-    criarPersonagem("nero", "N", 300, 200, "player");
-});
-
-botaoShin.addEventListener("click", function() {
-    criarPersonagem("shin", "S", 400, 200, "player");
-});
-
-botaoJotton.addEventListener("click", function() {
-    criarPersonagem("jotton", "J", 500, 200, "player");
-});
-
-botaoCalisto.addEventListener("click", function() {
-    criarPersonagem("calisto", "C", 600, 200, "player");
-});
 
 fecharPainel.addEventListener("click", function() {
     painelPersonagem.style.display = "none";

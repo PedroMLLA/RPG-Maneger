@@ -339,6 +339,15 @@ const Armazenamento = {
         }
     },
 
+    // Grava um dado numa campanha que NÃO é a aberta agora e espera o
+    // banco confirmar (ex.: os fixos, logo depois de criar a campanha).
+    async salvarEmCampanha(tipo, idCampanha, valor) {
+        const texto = TIPOS_DE_DADO[tipo].texto ? valor : JSON.stringify(valor);
+        localStorage.setItem(nomeNoStorage(tipo, idCampanha), texto);
+
+        await gravarNoBanco(tipo, idCampanha);
+    },
+
     // Sem idCampanha: apaga da campanha atual (e do banco).
     // Com idCampanha: só a cópia local (usado ao excluir a campanha;
     // no banco, os dados somem junto com ela).

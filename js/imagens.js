@@ -62,8 +62,9 @@ function otimizarImagem(arquivo, callback, tamanhoMaximo = 500) {
 // Recebe a imagem em base64 e devolve (pela Promise) o endereço dela
 // no Storage. Se não der para enviar (sem internet, sem login...),
 // devolve o próprio base64: a imagem funciona como antes.
-async function enviarImagemParaStorage(base64) {
-    if (!temBanco()) {
+// "idCampanha" escolhe a pasta; sem ele, é a campanha aberta agora.
+async function enviarImagemParaStorage(base64, idCampanha = idCampanhaAtual) {
+    if (typeof clienteSupabase === "undefined" || idCampanha === "padrao") {
         return base64;
     }
 
@@ -74,7 +75,7 @@ async function enviarImagemParaStorage(base64) {
         // Quase sempre WebP. Alguns iPhones antigos não geram WebP e
         // o navegador entrega PNG, então a extensão segue o tipo real.
         const extensao = arquivo.type.split("/")[1] || "webp";
-        const caminho = `${idCampanhaAtual}/${crypto.randomUUID()}.${extensao}`;
+        const caminho = `${idCampanha}/${crypto.randomUUID()}.${extensao}`;
 
         const { error } = await clienteSupabase.storage
             .from("imagens")

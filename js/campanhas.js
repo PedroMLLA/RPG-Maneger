@@ -18,6 +18,8 @@ const previaCampanha = document.getElementById("previa-campanha");
 const textoImagemCampanha = document.getElementById("texto-imagem-campanha");
 const botaoCancelarCampanha = document.getElementById("botao-cancelar-campanha");
 const botaoCriarCampanha = document.getElementById("botao-criar-campanha");
+const listaFixos = document.getElementById("lista-fixos");
+const botaoAdicionarFixo = document.getElementById("botao-adicionar-fixo");
 
 // "(hover: none)": aparelho sem mouse (celular, tablet). Lá não dá
 // para "passar o mouse", então o texto muda.
@@ -334,12 +336,173 @@ async function excluirCampanha(campanha) {
 
 // ----- Janela de nova campanha -----
 
+// ----- Personagens fixos da nova campanha -----
+// Cada personagem é um "cartão" com foto, nome, vida e sanidade.
+// A imagem escolhida fica guardada no próprio cartão (cartao.imagem)
+// e só vai para o Storage quando a campanha é criada, porque a pasta
+// no Storage é o id da campanha, que ainda não existe.
+
+function adicionarCartaoFixo() {
+    const cartao = document.createElement("div");
+    cartao.classList.add("cartao-fixo");
+    cartao.imagem = null;
+
+    // Foto: um <label> em volta do <input type="file"> abre a escolha
+    const foto = document.createElement("label");
+    foto.classList.add("foto-fixo");
+    foto.title = "Escolher imagem";
+
+    const previa = document.createElement("img");
+    previa.alt = "";
+    previa.hidden = true;
+
+    const icone = document.createElement("span");
+    icone.textContent = "🖼️";
+
+    const arquivo = document.createElement("input");
+    arquivo.type = "file";
+    arquivo.accept = "image/*";
+    arquivo.hidden = true;
+
+    arquivo.addEventListener("change", function() {
+        if (!arquivo.files[0]) {
+            return;
+        }
+
+        otimizarImagem(arquivo.files[0], function(imagemOtimizada) {
+            cartao.imagem = imagemOtimizada;
+            previa.src = imagemOtimizada;
+            previa.hidden = false;
+            icone.hidden = true;
+        });
+    });
+
+    foto.append(previa, icone, arquivo);
+
+    // Campos
+    const nome = document.createElement("input");
+    nome.type = "text";
+    nome.placeholder = "Nome";
+    nome.maxLength = 30;
+    nome.classList.add("nome-fixo");
+
+    const vida = document.createElement("input");
+    vida.type = "number";
+    vida.min = 1;
+    vida.placeholder = "Vida";
+    vida.classList.add("vida-fixo");
+
+    const sanidade = document.createElement("input");
+    sanidade.type = "number";
+    sanidade.min = 1;
+    sanidade.placeholder = "Sanidade";
+    sanidade.classList.add("sanidade-fixo");
+
+    const numeros = document.createElement("div");
+    numeros.classList.add("numeros-fixo");
+    numeros.append(vida, sanidade);
+
+    const campos = document.createElement("div");
+    campos.classList.add("campos-fixo");
+    campos.append(nome, numeros);
+
+    // × para tirar este cartão
+    const remover = document.createElement("button");
+    remover.type = "button";
+    remover.classList.add("remover-fixo");
+    remover.textContent = "×";
+    remover.title = "Tirar este personagem";
+
+    remover.addEventListener("click", function() {
+        cartao.remove();
+        atualizarBotoesRemover();
+    });
+
+    cartao.append(foto, campos, remover);
+    listaFixos.appendChild(cartao);
+    atualizarBotoesRemover();
+
+    return cartao;
+}
+
+// Com um cartão só, o × some: precisa sobrar pelo menos um
+function atualizarBotoesRemover() {
+    const cartoes = listaFixos.querySelectorAll(".cartao-fixo");
+
+    cartoes.forEach(function(cartao) {
+        cartao.querySelector(".remover-fixo").hidden = cartoes.length === 1;
+    });
+}
+
+botaoAdicionarFixo.addEventListener("click", function() {
+    adicionarCartaoFixo().querySelector(".nome-fixo").focus();
+});
+
+// Lê os cartões e devolve { personagens, erro }.
+// Cartão todo em branco é ignorado; cartão pela metade é erro.
+function lerFixos() {
+    const personagensFixos = {};
+
+    for (const cartao of listaFixos.querySelectorAll(".cartao-fixo")) {
+        const nome = cartao.querySelector(".nome-fixo").value.trim();
+        const vida = Number(cartao.querySelector(".vida-fixo").value);
+        const sanidade = Number(cartao.querySelector(".sanidade-fixo").value);
+
+        if (!nome && !vida && !sanidade && !cartao.imagem) {
+            continue;
+        }
+
+        if (!nome) {
+            return { erro: "Falta o nome de um personagem fixo." };
+        }
+
+        if (!(vida > 0)) {
+            return { erro: `Dê a vida de ${nome} (maior que zero).` };
+        }
+
+        // Mesmo jeito de criar o id que a barra lateral usa
+        const id = nome.toLowerCase().replaceAll(" ", "-");
+
+        if (personagensFixos[id]) {
+            return { erro: `Tem dois personagens chamados "${nome}".` };
+        }
+
+        const personagem = {
+            nome: nome,
+            hp: vida,
+            hpMaximo: vida,
+            tipo: "player",
+            fixo: true,
+            imagem: cartao.imagem
+        };
+
+        // Sanidade é opcional: sem ela, o painel não mostra a barra
+        if (sanidade > 0) {
+            personagem.sanidade = sanidade;
+            personagem.sanidadeMaxima = sanidade;
+        }
+
+        personagensFixos[id] = personagem;
+    }
+
+    if (Object.keys(personagensFixos).length === 0) {
+        return { erro: "Adicione pelo menos um personagem fixo (nome e vida)." };
+    }
+
+    return { personagens: personagensFixos };
+}
+
+
 function abrirJanelaCampanha() {
     campoNomeCampanha.value = "";
     campoImagemCampanha.value = "";
     imagemNova = null;
     previaCampanha.hidden = true;
     textoImagemCampanha.hidden = false;
+
+    // Começa com um cartão vazio
+    listaFixos.innerHTML = "";
+    adicionarCartaoFixo();
 
     janelaCampanha.style.display = "flex";
     campoNomeCampanha.focus();
@@ -390,12 +553,29 @@ async function criarCampanha() {
         return;
     }
 
+    const fixos = lerFixos();
+
+    if (fixos.erro) {
+        alert(fixos.erro);
+        return;
+    }
+
     // Evita criar duas vezes com cliques seguidos enquanto o banco responde
     botaoCriarCampanha.disabled = true;
 
     try {
         // O banco devolve a campanha já com o id e o código
         const nova = await inserirCampanha(nome, imagemNova);
+
+        try {
+            await salvarFixos(nova.id, fixos.personagens);
+        } catch (erro) {
+            // Sem os fixos a campanha fica pela metade: desfaz e avisa
+            await clienteSupabase.from("campanhas").delete().eq("id", nova.id);
+            Armazenamento.apagarCampanha(nova.id);
+            throw erro;
+        }
+
         campanhas.push(nova);
 
         guardarCopiaLocal();
@@ -409,6 +589,21 @@ async function criarCampanha() {
     } finally {
         botaoCriarCampanha.disabled = false;
     }
+}
+
+// Envia as fotos dos fixos para a pasta da campanha nova e grava os
+// personagens nela. "await" em cada passo: só termina quando o banco
+// confirmou tudo.
+async function salvarFixos(idCampanha, personagensFixos) {
+    for (const id in personagensFixos) {
+        const personagem = personagensFixos[id];
+
+        if (personagem.imagem) {
+            personagem.imagem = await enviarImagemParaStorage(personagem.imagem, idCampanha);
+        }
+    }
+
+    await Armazenamento.salvarEmCampanha("personagens", idCampanha, personagensFixos);
 }
 
 botaoCriarCampanha.addEventListener("click", criarCampanha);

@@ -1,8 +1,20 @@
-// Dados dos personagens: os 4 principais, a função que salva no
-// localStorage e quem está selecionado/no mapa.
+// Dados dos personagens: a lista da campanha, a função que salva e
+// quem está selecionado/no mapa.
 // Este arquivo vem ANTES dos outros da tela do mestre, porque todos usam "personagens".
 
-const personagens = {
+// Começa vazia: o inicio.js enche com o que a campanha tem salvo.
+const personagens = {};
+
+// Personagens FIXOS: escolhidos ao criar a campanha (campanhas.js).
+// Ficam marcados com "fixo: true" e não têm o × para excluir.
+function ehFixo(id) {
+    return Boolean(personagens[id] && personagens[id].fixo);
+}
+
+// Os 4 de Insurreição, de antes de cada campanha ter os próprios fixos.
+// Só servem para as campanhas ANTIGAS (veja o inicio.js).
+// Campanhas novas não recebem mais esses 4.
+const fixosAntigos = {
     nero: {
         nome: "Nero",
         hp: 60,
@@ -40,13 +52,8 @@ const personagens = {
     }
 };
 
-// Para os 4 principais, a vida máxima, a sanidade máxima e a imagem
-// vêm SEMPRE daqui, mesmo que o navegador tenha um valor antigo salvo
-// (veja atualizarFichaBase no inicio.js). Assim, mudar esses números
-// aqui vale para todas as campanhas.
-
-// Os 4 personagens fixos já têm botão no HTML
-const idsFixos = ["nero", "shin", "jotton", "calisto"];
+// Para esses 4, a vida máxima, a sanidade máxima e a imagem vêm
+// SEMPRE daqui (veja atualizarFichaBase no inicio.js).
 
 // Salva UM personagem sem apagar o que a janela do Mestre salvou.
 function salvarPersonagemNoStorage(id) {
@@ -64,5 +71,5 @@ function salvarPersonagemNoStorage(id) {
 }
 
 // Quem está aberto no painel de vida/sanidade
-let personagemSelecionado = personagens.nero;
-let idSelecionado = "nero";
+let personagemSelecionado = null;
+let idSelecionado = null;

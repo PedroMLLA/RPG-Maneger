@@ -46,12 +46,12 @@ Armazenamento.quandoMudar("personagens", function(personagensNovos) {
 
     // Personagem ou inimigo excluído em outra tela (o × da barra lateral
     // ou o Painel do Mestre): some da barra lateral e do mapa.
-    // Os 4 fixos (Nero, Shin...) nunca são excluídos.
+    // Os fixos da campanha nunca são excluídos.
     for (const id in personagens) {
 
         const foiExcluido = !personagensAtualizados[id];
 
-        if (!foiExcluido || idsFixos.includes(id)) {
+        if (!foiExcluido || ehFixo(id)) {
             continue;
         }
 
