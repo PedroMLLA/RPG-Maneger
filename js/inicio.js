@@ -36,13 +36,16 @@ for (const id in personagensSalvos) {
 
     personagens[id] = personagensSalvos[id];
 
-    if (ehFixo(id) && fixosAntigos[id]) {
+    // Só na hora de virar fixo. Depois disso, quem manda é o ✎ da
+    // barra lateral: se o dados.js ganhasse sempre, a edição do mestre
+    // seria desfeita toda vez que o mapa abrisse.
+    if (!temFixos && fixosAntigos[id]) {
         atualizarFichaBase(id, fixosAntigos[id]);
     }
 }
 
-// Os 4 antigos: vida máxima, sanidade máxima e imagem vêm do dados.js.
-// A vida e a sanidade ATUAIS se ajustam ao novo máximo:
+// Os 4 antigos, ao virarem fixos: vida máxima, sanidade máxima e imagem
+// vêm do dados.js. A vida e a sanidade ATUAIS se ajustam ao novo máximo:
 //  - quem estava cheio continua cheio (70/70 vira 78/78)
 //  - quem estava machucado continua com o mesmo valor, sem passar do máximo
 function atualizarFichaBase(id, fichaBase) {

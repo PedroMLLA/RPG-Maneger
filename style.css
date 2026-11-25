@@ -681,7 +681,9 @@ header h1 .marca,
     white-space: nowrap;
 }
 
-#barra-lateral .linha-personagem .excluir-personagem {
+/* O × (excluir) dos criados e o ✎ (editar) dos fixos */
+#barra-lateral .linha-personagem .excluir-personagem,
+#barra-lateral .linha-personagem .editar-personagem {
     flex: none;
     width: 34px;
     margin-bottom: 0;
@@ -691,14 +693,48 @@ header h1 .marca,
     color: var(--texto-suave);
 }
 
-#barra-lateral .linha-personagem .excluir-personagem::before {
+#barra-lateral .linha-personagem .excluir-personagem::before,
+#barra-lateral .linha-personagem .editar-personagem::before {
     display: none;         /* sem a bolinha dos nomes */
 }
 
-#barra-lateral .linha-personagem .excluir-personagem:hover {
+#barra-lateral .linha-personagem .excluir-personagem:hover,
+#barra-lateral .linha-personagem .editar-personagem:hover {
     color: var(--destaque-forte);
     border-color: var(--destaque);
     transform: none;
+}
+
+/* Janela do ✎: rótulo | atual | máxima */
+.caixa-editar-fixo {
+    width: min(360px, calc(100vw - 32px));
+}
+
+.grade-editar-fixo {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    align-items: center;
+    gap: 8px 10px;
+    margin-top: 14px;
+}
+
+.grade-editar-fixo .rotulo-coluna {
+    font-size: 12px;
+    color: var(--texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.grade-editar-fixo input {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.dica-editar-fixo {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--texto-suave);
 }
 
 /* Botões de backup da campanha */

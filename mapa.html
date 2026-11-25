@@ -177,6 +177,36 @@
 </section>
 </main>
     <!-- Janela que abre quando um aliado chega a 0 de vida -->
+    <!-- Editar vida e sanidade de um personagem fixo (✎ na barra lateral) -->
+    <div id="janela-editar-fixo" class="janela-modal">
+        <div class="caixa-inventario caixa-editar-fixo">
+
+            <h2 id="titulo-editar-fixo">✎ Editar</h2>
+
+            <div class="grade-editar-fixo">
+                <span></span>
+                <span class="rotulo-coluna">Atual</span>
+                <span class="rotulo-coluna">Máxima</span>
+
+                <label for="editar-hp">Vida</label>
+                <input type="number" id="editar-hp" min="0">
+                <input type="number" id="editar-hp-maximo" min="1">
+
+                <label for="editar-sanidade">Sanidade</label>
+                <input type="number" id="editar-sanidade" min="0">
+                <input type="number" id="editar-sanidade-maxima" min="0" placeholder="—">
+            </div>
+
+            <p class="dica-editar-fixo">Sanidade máxima vazia ou 0: o personagem fica sem sanidade.</p>
+
+            <div class="acoes-inventario">
+                <button id="botao-cancelar-editar-fixo">Cancelar</button>
+                <button id="botao-salvar-editar-fixo" class="botao-salvar">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+
     <div id="janela-morrendo" class="janela-modal">
         <div class="caixa-inventario caixa-morrendo">
 
