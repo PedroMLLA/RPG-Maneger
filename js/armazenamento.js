@@ -49,6 +49,11 @@ const TIPOS_DE_DADO = {
     // Último código digitado pelo jogador (para não precisar digitar de novo)
     ultimoCodigo:    { nome: "ultimoCodigo", texto: true },
 
+    // Personagem que o jogador escolheu em CADA campanha, neste aparelho:
+    // { idDaCampanha: idDoPersonagem }. Nunca vai para o banco: cada
+    // celular lembra só o seu (e dois jogadores podem escolher o mesmo).
+    meusPersonagens: { nome: "meusPersonagens" },
+
     // Aviso rápido entre a janela do Painel do Mestre e o mapa
     inimigoParaMapa: { nome: "inimigoParaMapa" }
 };

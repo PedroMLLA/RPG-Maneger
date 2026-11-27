@@ -17,6 +17,43 @@ const ultimoHp = {};
 const vidaDoTokenAntes = {};
 
 
+// ----- Meu personagem -----
+// O jogador que entrou pelo código escolhe quem ele é. Do personagem
+// dele, vê SEMPRE a vida, os itens, as habilidades e a ficha, mesmo sem
+// o mestre liberar. A escolha fica só neste aparelho.
+// (Na TV do mestre, aberta pelo mapa, não existe "meu personagem".)
+const modoJogador = new URLSearchParams(location.search).has("campanha");
+
+// "" = escolheu "Só assistir"; null = ainda não escolheu nada
+function lerEscolha() {
+    const escolhas = Armazenamento.ler("meusPersonagens", {});
+    return idCampanhaAtual in escolhas ? escolhas[idCampanhaAtual] : null;
+}
+
+let meuPersonagem = modoJogador ? lerEscolha() : null;
+
+// A ficha do meu personagem cobre o mapa, então só abre no botão "📜 Ficha"
+let minhaFichaAberta = false;
+
+function ehMeu(id) {
+    return Boolean(meuPersonagem) && id === meuPersonagem;
+}
+
+// Quem aparece nos painéis: meu personagem primeiro (mesmo fora do
+// mapa), depois quem está no mapa.
+function idsParaMostrar(personagens, estado) {
+    const noMapa = Object.keys(estado.tokens || {});
+
+    if (meuPersonagem && personagens[meuPersonagem]) {
+        return [meuPersonagem, ...noMapa.filter(function(id) {
+            return id !== meuPersonagem;
+        })];
+    }
+
+    return noMapa;
+}
+
+
 // Mostra o mesmo mapa que o mestre está usando.
 function carregarMapa() {
     imagemMapa.src =
@@ -166,6 +203,8 @@ function desenharTokens() {
     const personagens = Armazenamento.ler("personagens", {});
     const estado = Armazenamento.ler("batalha", { tokens: {} });
 
+    conferirMeuPersonagem(personagens);
+
     camadaTokens.innerHTML = "";
 
     for (const id in estado.tokens) {
@@ -211,6 +250,11 @@ function desenharTokens() {
         // Destaca quem está jogando agora
         if (id === estado.idDaVez) {
             boneco.classList.add("token-da-vez");
+        }
+
+        // Meu personagem ganha a etiqueta "Você" (veja o CSS)
+        if (ehMeu(id)) {
+            boneco.classList.add("meu-token");
         }
 
         camadaTokens.appendChild(boneco);
@@ -276,20 +320,166 @@ for (const botao of [botaoGrupo, botaoItens]) {
 }
 
 
+// ----- "Quem é você?" e os botões do meu personagem -----
+const janelaMeuPersonagem = document.getElementById("janela-meu-personagem");
+const listaEscolher = document.getElementById("lista-escolher");
+const botaoMeuPersonagem = document.getElementById("botao-meu-personagem");
+const botaoMinhaFicha = document.getElementById("botao-minha-ficha");
+
+// O mestre excluiu o personagem que eu tinha escolhido: esquece a escolha.
+// (Lista vazia = os dados ainda não chegaram; aí não dá para saber.)
+function conferirMeuPersonagem(personagens) {
+    const sumiu = meuPersonagem && !personagens[meuPersonagem];
+
+    if (sumiu && Object.keys(personagens).length > 0) {
+        guardarEscolha(null);
+    }
+
+    atualizarBotoesMeuPersonagem(personagens);
+}
+
+// Nome no botão "👤" e o botão "📜 Ficha" só para quem escolheu alguém
+function atualizarBotoesMeuPersonagem(personagens) {
+    botaoMeuPersonagem.hidden = !modoJogador;
+
+    const meu = meuPersonagem && personagens[meuPersonagem];
+
+    botaoMeuPersonagem.textContent = meu ? `👤 ${meu.nome}` : "👤 Quem sou eu";
+    botaoMinhaFicha.hidden = !meu;
+    botaoMinhaFicha.classList.toggle("ativo", Boolean(meu) && minhaFichaAberta);
+}
+
+// id = personagem escolhido; "" = só assistir; null = esquecer a escolha
+function guardarEscolha(id) {
+    const escolhas = Armazenamento.ler("meusPersonagens", {});
+
+    if (id === null) {
+        delete escolhas[idCampanhaAtual];
+    } else {
+        escolhas[idCampanhaAtual] = id;
+    }
+
+    Armazenamento.salvar("meusPersonagens", escolhas);
+
+    meuPersonagem = id || null;
+    minhaFichaAberta = false;
+}
+
+function abrirEscolherPersonagem() {
+    const personagens = Armazenamento.ler("personagens", {});
+
+    // Só aliados: os fixos da campanha primeiro, depois os outros
+    const ids = Object.keys(personagens)
+        .filter(function(id) {
+            return personagens[id] && personagens[id].tipo !== "inimigo";
+        })
+        .sort(function(a, b) {
+            return Boolean(personagens[b].fixo) - Boolean(personagens[a].fixo);
+        });
+
+    listaEscolher.innerHTML = "";
+
+    if (ids.length === 0) {
+        const aviso = document.createElement("p");
+        aviso.classList.add("dica-escolher");
+        aviso.textContent = "O mestre ainda não criou nenhum personagem.";
+        listaEscolher.appendChild(aviso);
+    }
+
+    for (const id of ids) {
+        const personagem = personagens[id];
+
+        const opcao = document.createElement("button");
+        opcao.type = "button";
+        opcao.classList.add("opcao-escolher");
+        opcao.classList.toggle("escolhida", ehMeu(id));
+
+        // Foto (ou a inicial, se não tiver)
+        const foto = document.createElement("span");
+        foto.classList.add("foto-escolher");
+
+        if (personagem.imagem) {
+            foto.style.backgroundImage = `url('${personagem.imagem}')`;
+        } else {
+            foto.textContent = personagem.nome.charAt(0).toUpperCase();
+        }
+
+        const nome = document.createElement("span");
+        nome.textContent = personagem.nome;
+
+        opcao.append(foto, nome);
+
+        opcao.addEventListener("click", function() {
+            escolher(id);
+        });
+
+        listaEscolher.appendChild(opcao);
+    }
+
+    janelaMeuPersonagem.style.display = "flex";
+}
+
+function escolher(id) {
+    guardarEscolha(id);
+    janelaMeuPersonagem.style.display = "none";
+    desenharTokens();
+}
+
+botaoMeuPersonagem.addEventListener("click", abrirEscolherPersonagem);
+
+document.getElementById("botao-so-assistir").addEventListener("click", function() {
+    escolher("");
+});
+
+// Tocar no fundo escuro fecha sem mudar nada
+janelaMeuPersonagem.addEventListener("click", function(evento) {
+    if (evento.target === janelaMeuPersonagem) {
+        janelaMeuPersonagem.style.display = "none";
+    }
+});
+
+// "📜 Ficha": abre e fecha a ficha do meu personagem no centro
+function alternarMinhaFicha(abrir) {
+    minhaFichaAberta = abrir;
+
+    // No celular, fecha as gavetas para a ficha aparecer inteira
+    if (abrir) {
+        document.body.classList.remove("abrir-grupo", "abrir-itens");
+    }
+
+    desenharTokens();
+}
+
+botaoMinhaFicha.addEventListener("click", function() {
+    alternarMinhaFicha(!minhaFichaAberta);
+});
+
+// Tocar fora das fichas (no fundo escuro) fecha a minha
+fichasJogadores.addEventListener("click", function(evento) {
+    if (evento.target === fichasJogadores && minhaFichaAberta) {
+        alternarMinhaFicha(false);
+    }
+});
+
+
 // Fichas (roda de atributos + perícias) dos aliados que o mestre liberou.
 function desenharFichas(personagens, estado) {
     fichasJogadores.innerHTML = "";
 
-    for (const id in estado.tokens) {
+    for (const id of idsParaMostrar(personagens, estado)) {
         const personagem = personagens[id];
 
-        // Aliado ou inimigo: só aparece se o mestre liberou a ficha
-        if (!personagem || !personagem.fichaVisivel) {
+        // Aliado ou inimigo: só aparece se o mestre liberou a ficha.
+        // A minha aparece quando eu abro pelo botão "📜 Ficha".
+        const minha = ehMeu(id) && minhaFichaAberta;
+
+        if (!personagem || !(personagem.fichaVisivel || minha)) {
             continue;
         }
 
         const cartao = document.createElement("div");
         cartao.classList.add("cartao-ficha");
+        cartao.classList.toggle("cartao-meu", ehMeu(id));
 
         const titulo = document.createElement("h3");
         titulo.textContent = `📜 ${personagem.nome}`;
@@ -335,15 +525,16 @@ function desenharFichas(personagens, estado) {
 // um item e que o mestre liberou para os jogadores verem.
 function desenharInventarios(personagens, estado) {
 
-    for (const id in estado.tokens) {
+    for (const id of idsParaMostrar(personagens, estado)) {
         const personagem = personagens[id];
 
         if (!personagem) {
             continue;
         }
 
-        // Só aparece se o mestre ligou o "mostrar" na janela do inventário
-        if (!personagem.inventarioVisivel) {
+        // Só aparece se o mestre ligou o "mostrar" na janela do
+        // inventário (ou se é o meu personagem)
+        if (!personagem.inventarioVisivel && !ehMeu(id)) {
             continue;
         }
 
@@ -355,6 +546,7 @@ function desenharInventarios(personagens, estado) {
 
         const cartao = document.createElement("div");
         cartao.classList.add("cartao-inventario");
+        cartao.classList.toggle("cartao-meu", ehMeu(id));
 
         const titulo = document.createElement("h3");
         titulo.textContent = `🎒 ${personagem.nome}`;
@@ -407,10 +599,10 @@ function desenharInventarios(personagens, estado) {
 // Ficam na mesma coluna da direita, abaixo dos inventários.
 function desenharHabilidades(personagens, estado) {
 
-    for (const id in estado.tokens) {
+    for (const id of idsParaMostrar(personagens, estado)) {
         const personagem = personagens[id];
 
-        if (!personagem || !personagem.habilidadesVisivel) {
+        if (!personagem || !(personagem.habilidadesVisivel || ehMeu(id))) {
             continue;
         }
 
@@ -422,6 +614,7 @@ function desenharHabilidades(personagens, estado) {
 
         const cartao = document.createElement("div");
         cartao.classList.add("cartao-inventario", "cartao-habilidades");
+        cartao.classList.toggle("cartao-meu", ehMeu(id));
 
         const titulo = document.createElement("h3");
         titulo.textContent = `🔥 ${personagem.nome}`;
@@ -494,16 +687,18 @@ function criarBarra(rotulo, atual, maximo, classe) {
 function desenharGrupo(personagens, estado) {
     grupoJogadores.innerHTML = "";
 
-    for (const id in estado.tokens) {
+    for (const id of idsParaMostrar(personagens, estado)) {
         const personagem = personagens[id];
 
         // Só aparece quem o mestre liberou (botão direito no token)
-        if (!personagem || !personagem.vidaVisivel) {
+        // e o meu personagem
+        if (!personagem || !(personagem.vidaVisivel || ehMeu(id))) {
             continue;
         }
 
         const cartao = document.createElement("div");
         cartao.classList.add("cartao-aliado");
+        cartao.classList.toggle("cartao-meu", ehMeu(id));
 
         // Inimigo ganha a etiqueta "INIMIGO" no cartão (veja o CSS)
         if (personagem.tipo === "inimigo") {
@@ -673,6 +868,11 @@ async function iniciarModoJogador() {
         desenharImagens();
 
         Armazenamento.ligarTempoReal();
+
+        // Primeira vez nesta campanha: pergunta quem ele é
+        if (lerEscolha() === null) {
+            abrirEscolherPersonagem();
+        }
 
     } catch (erro) {
         console.error(erro);

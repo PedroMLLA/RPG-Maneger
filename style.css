@@ -2633,9 +2633,155 @@ body.visao-jogadores {
     touch-action: none;
 }
 
-/* Botões "Grupo" e "Itens": só existem no celular (veja abaixo) */
+/* Botões no rodapé. "Grupo" e "Itens" só existem no celular (veja
+   abaixo); "Ficha" e "Quem sou eu" aparecem no PC também. */
 #botoes-paineis {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    z-index: 60;                   /* por cima das fichas abertas */
+
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    pointer-events: none;          /* só os botões recebem o toque */
+}
+
+.botao-painel {
+    pointer-events: auto;
+    max-width: 45vw;
+    padding: 12px 20px;
+
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;       /* nome comprido termina em "..." */
+    color: var(--texto);
+
+    background: rgba(var(--painel-rgb), 0.92);
+    border: 1px solid var(--borda-forte);
+    border-radius: var(--pilula);
+    box-shadow: var(--sombra);
+}
+
+.botao-painel[hidden],
+.botao-painel:not(.botao-sempre) {
     display: none;
+}
+
+/* Ficha aberta: botão vermelho */
+#botao-minha-ficha.ativo {
+    background: var(--destaque);
+    border-color: var(--destaque);
+    color: #fff;
+}
+
+/* Meu personagem no mapa: etiqueta "Você" embaixo do token */
+.visao-jogadores .boneco.meu-token::after {
+    content: "Você";
+
+    position: absolute;
+    left: 50%;
+    bottom: -30px;
+    translate: -50% 0;
+
+    padding: 1px 9px;
+
+    font-family: var(--fonte-texto);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #fff;
+
+    background: var(--sanidade);
+    border-radius: var(--pilula);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+/* Cartões do meu personagem: borda azul e "Você" em cima do nome */
+.cartao-meu {
+    border-color: var(--sanidade);
+}
+
+.cartao-meu h3::before {
+    content: "Você";
+    display: block;
+    margin-bottom: 2px;
+
+    font-family: var(--fonte-texto);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sanidade);
+}
+
+/* Janela "Quem é você?" */
+.caixa-escolher h2 {
+    font-size: 22px;
+    color: var(--destaque-forte);
+}
+
+.dica-escolher {
+    margin: 6px 0 16px;
+    font-size: 14px;
+    color: var(--texto-suave);
+}
+
+#lista-escolher {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.opcao-escolher {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.opcao-escolher.escolhida {
+    border-color: var(--sanidade);
+    box-shadow: 0 0 0 2px var(--sanidade);
+}
+
+/* Foto redonda do personagem (ou a inicial) */
+.foto-escolher {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: var(--fonte-titulo);
+    font-size: 26px;
+
+    background: radial-gradient(circle at 35% 30%, #2b3039, #0f1115);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 50%;
+}
+
+#botao-so-assistir {
+    width: 100%;
+    color: var(--texto-suave);
+    background: transparent;
 }
 
 /* ----- Visão dos jogadores no celular ----- */
@@ -2650,30 +2796,21 @@ body.visao-jogadores {
         box-shadow: 4px 4px 0 var(--destaque);
     }
 
-    /* Botões no rodapé, lado a lado */
+    /* No celular todos os botões aparecem, um pouco menores para caber */
+    /* Sempre numa linha só: se faltar espaço, o nome encolhe com "..." */
     #botoes-paineis {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 16px;
-        z-index: 60;
-
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        pointer-events: none;      /* só os botões recebem o toque */
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 0 8px;
     }
 
-    .botao-painel {
-        pointer-events: auto;
-        padding: 12px 20px;
-        font-size: 15px;
-        font-weight: 700;
-        background: rgba(var(--painel-rgb), 0.92);
-        border: 1px solid var(--borda-forte);
-        border-radius: var(--pilula);
-        box-shadow: var(--sombra);
-        color: var(--texto);
+    .botao-painel,
+    .botao-painel:not(.botao-sempre) {
+        display: block;
+        flex: 0 1 auto;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 13px;
     }
 
     .botao-painel[hidden] {

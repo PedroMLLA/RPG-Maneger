@@ -37,7 +37,20 @@
         <nav id="botoes-paineis">
             <button type="button" class="botao-painel" data-painel="grupo" hidden>❤ Grupo</button>
             <button type="button" class="botao-painel" data-painel="itens" hidden>🎒 Itens</button>
+            <!-- Estes dois aparecem também no PC (jogador que entrou pelo código) -->
+            <button type="button" class="botao-painel botao-sempre" id="botao-minha-ficha" hidden>📜 Ficha</button>
+            <button type="button" class="botao-painel botao-sempre" id="botao-meu-personagem" hidden>👤 Quem sou eu</button>
         </nav>
+
+        <!-- "Quem é você?": o jogador escolhe o personagem dele -->
+        <div id="janela-meu-personagem" class="janela-modal">
+            <div class="caixa-inventario caixa-escolher">
+                <h2>Quem é você?</h2>
+                <p class="dica-escolher">Você sempre vai ver a vida, os itens e a ficha do seu personagem.</p>
+                <div id="lista-escolher"></div>
+                <button type="button" id="botao-so-assistir">Só assistir</button>
+            </div>
+        </div>
 
         <!-- Fichas que o mestre liberou: aparecem no centro, por cima do mapa -->
         <div id="fichas-jogadores"></div>
