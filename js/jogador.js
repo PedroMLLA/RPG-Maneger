@@ -258,6 +258,10 @@ function desenharTokens() {
         }
 
         camadaTokens.appendChild(boneco);
+
+        // Cone de visão, se o mestre ligou (depois de entrar na tela,
+        // para o cone saber o tamanho do token)
+        definirCampoVisao(boneco, posicao.visao);
     }
 
     if (estado.nomeDaVez) {
@@ -806,6 +810,15 @@ Armazenamento.quandoChegarAoVivo("token", function(dados) {
     if (boneco) {
         boneco.style.left = `${dados.x}px`;
         boneco.style.top = `${dados.y}px`;
+    }
+});
+
+// O mestre está girando um cone de visão: gira só ele
+Armazenamento.quandoChegarAoVivo("visao", function(dados) {
+    const boneco = camadaTokens.querySelector(`[data-id="${CSS.escape(dados.id)}"]`);
+
+    if (boneco) {
+        definirCampoVisao(boneco, dados.angulo);
     }
 });
 

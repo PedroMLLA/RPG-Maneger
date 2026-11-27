@@ -150,8 +150,13 @@ function trocarAparenciaToken(boneco, personagem) {
     boneco.classList.remove("imagem-personagem", "token-inimigo");
     boneco.style.backgroundImage = "";
 
-    // Limpa a letra (e o contador/ícones, que atualizarEstadoToken recoloca)
-    boneco.textContent = "";
+    // Limpa a letra (e o contador/ícones, que atualizarEstadoToken
+    // recoloca). Só o campo de visão fica: ele tem a alça do mestre.
+    for (const filho of [...boneco.childNodes]) {
+        if (!(filho.classList && filho.classList.contains("campo-visao"))) {
+            filho.remove();
+        }
+    }
 
     const tipo = personagem.tipo || "player";
 
@@ -164,11 +169,19 @@ function trocarAparenciaToken(boneco, personagem) {
     );
 
     atualizarEstadoToken(boneco, personagem);
+
+    // Trocou de imagem? O token pode ter mudado de tamanho: o cone se ajusta
+    if (boneco.dataset.visao !== undefined) {
+        definirCampoVisao(boneco, Number(boneco.dataset.visao));
+    }
 }
 
 function aplicarVisualToken(boneco, personagem, tipo, tamanho, letra) {
 
     boneco.classList.add("boneco");
+
+    // Para o CSS pintar o cone do inimigo de vermelho
+    boneco.dataset.tipo = tipo;
 
     if (tipo === "inimigo" && tamanho) {
         boneco.style.width = `${tamanho}px`;
@@ -182,10 +195,108 @@ function aplicarVisualToken(boneco, personagem, tipo, tamanho, letra) {
 
     } else {
 
-        boneco.textContent = letra;
+        // prepend (e não textContent): textContent apagaria o cone
+        boneco.prepend(letra);
 
         if (tipo === "inimigo") {
             boneco.classList.add("token-inimigo");
         }
     }
+}
+
+
+// ----- Campo de visão -----
+// Um cone na frente do token mostrando para onde ele olha. A imagem do
+// token fica sempre em pé: só o cone gira em volta dela.
+// O ângulo é em graus: 0 = direita, 90 = baixo, 180 = esquerda, -90 = cima
+// (no navegador o "y" cresce para baixo, por isso 90 é baixo).
+const ABERTURA_VISAO = 90;    // largura do cone, em graus
+const ALCANCE_VISAO = 200;    // até onde vai, em pixels, depois da borda do token
+
+// Cada cone tem o próprio degradê, e o id dele precisa ser único na página
+let contadorCones = 0;
+
+// angulo = número: liga (ou gira) o cone. null/undefined: desliga.
+// Devolve a caixa do cone (o mestre põe a alça de girar nela).
+function definirCampoVisao(boneco, angulo) {
+    let campo = boneco.querySelector(".campo-visao");
+
+    if (angulo === null || angulo === undefined) {
+        if (campo) {
+            campo.remove();
+        }
+        delete boneco.dataset.visao;
+        return null;
+    }
+
+    if (!campo) {
+        contadorCones++;
+
+        campo = document.createElement("div");
+        campo.classList.add("campo-visao");
+
+        // currentColor = a cor de texto do .campo-visao (veja o CSS)
+        campo.innerHTML = `
+            <svg>
+                <defs>
+                    <radialGradient id="cone-${contadorCones}" gradientUnits="userSpaceOnUse" cx="0" cy="0">
+                        <stop class="cone-inicio" stop-color="currentColor" stop-opacity="0.6"></stop>
+                        <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+                    </radialGradient>
+                </defs>
+                <path fill="url(#cone-${contadorCones})" stroke="currentColor" stroke-opacity="0.9" stroke-width="2"></path>
+            </svg>
+        `;
+
+        boneco.appendChild(campo);
+    }
+
+    // O token pode ainda não estar na tela (offsetWidth 0): usa o tamanho do CSS
+    const tamanho = boneco.offsetWidth ||
+        parseFloat(boneco.style.width) ||
+        (boneco.classList.contains("imagem-personagem") ? 80 : 44);
+
+    desenharCone(campo, tamanho);
+
+    boneco.dataset.visao = angulo;
+    campo.style.transform = `rotate(${angulo}deg)`;
+
+    return campo;
+}
+
+// Desenha o cone apontando para a direita (0°); quem gira é a caixa.
+// É um "pedaço de rosca": começa na borda do token, para não cobrir a imagem.
+function desenharCone(campo, tamanho) {
+    const dentro = tamanho / 2 + 4;
+    const fora = tamanho / 2 + ALCANCE_VISAO;
+    const meio = (ABERTURA_VISAO / 2) * Math.PI / 180;   // graus → radianos
+
+    // Ponto a uma distância "raio", na direção "angulo" (seno e cosseno)
+    function ponto(raio, angulo) {
+        return `${(raio * Math.cos(angulo)).toFixed(1)} ${(raio * Math.sin(angulo)).toFixed(1)}`;
+    }
+
+    // M = vai até, L = linha, A = arco, Z = fecha
+    const caminho = [
+        `M ${ponto(dentro, -meio)}`,
+        `L ${ponto(fora, -meio)}`,
+        `A ${fora} ${fora} 0 0 1 ${ponto(fora, meio)}`,
+        `L ${ponto(dentro, meio)}`,
+        `A ${dentro} ${dentro} 0 0 0 ${ponto(dentro, -meio)}`,
+        "Z"
+    ].join(" ");
+
+    const svg = campo.querySelector("svg");
+    svg.setAttribute("viewBox", `${-fora} ${-fora} ${fora * 2} ${fora * 2}`);
+    svg.setAttribute("width", fora * 2);
+    svg.setAttribute("height", fora * 2);
+    svg.style.left = `${-fora}px`;
+    svg.style.top = `${-fora}px`;
+
+    campo.querySelector("path").setAttribute("d", caminho);
+    campo.querySelector("radialGradient").setAttribute("r", fora);
+    campo.querySelector(".cone-inicio").setAttribute("offset", dentro / fora);
+
+    // A alça do mestre fica na ponta do cone
+    campo.style.setProperty("--alcance", `${fora}px`);
 }

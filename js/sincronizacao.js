@@ -138,9 +138,14 @@ Armazenamento.quandoMudar("batalha", function(estado) {
         for (const id in tokens) {
             const posicao = tokens[id];
 
-            // Já está aqui: só acerta a posição (menos se estamos arrastando ele)
+            // Já está aqui: só acerta a posição (menos se estamos arrastando
+            // ele) e o cone (menos se estamos girando ele)
             if (personagensCriados[id]) {
                 moverTokenDeFora(id, posicao.x, posicao.y);
+
+                if (!personagensCriados[id].dataset.girando) {
+                    aplicarCampoVisao(id, posicao.visao);
+                }
                 continue;
             }
 
@@ -164,6 +169,8 @@ Armazenamento.quandoMudar("batalha", function(estado) {
                 personagem.tipo || "player",
                 tamanhoEmPixels(personagem.tamanho)
             );
+
+            aplicarCampoVisao(id, posicao.visao);
         }
 
         turnoAtual = (estado && estado.turnoAtual) || 0;
@@ -187,6 +194,15 @@ function moverTokenDeFora(id, x, y) {
 // A outra tela está arrastando um token agora (mensagem ao vivo)
 Armazenamento.quandoChegarAoVivo("token", function(dados) {
     moverTokenDeFora(dados.id, dados.x, dados.y);
+});
+
+// A outra tela está girando um cone agora
+Armazenamento.quandoChegarAoVivo("visao", function(dados) {
+    const boneco = personagensCriados[dados.id];
+
+    if (boneco && !boneco.dataset.girando) {
+        aplicarCampoVisao(dados.id, dados.angulo);
+    }
 });
 
 

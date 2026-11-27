@@ -249,6 +249,94 @@ function avisarPosicaoAoVivo(boneco, id) {
     });
 }
 
+// ----- Campo de visão (o cone) na tela do mestre -----
+// Liga, gira ou desliga (angulo null) o cone de um token do mapa.
+// O desenho é do tokens.js; aqui só entra a alça de girar.
+function aplicarCampoVisao(id, angulo) {
+    const boneco = personagensCriados[id];
+
+    if (!boneco) {
+        return;
+    }
+
+    const campo = definirCampoVisao(boneco, angulo);
+
+    if (campo && !campo.querySelector(".alca-visao")) {
+        criarAlcaVisao(campo, boneco, id);
+    }
+}
+
+// A bolinha na ponta do cone: arrastar em volta do token faz ele olhar
+// para onde o mouse (ou o dedo) está.
+function criarAlcaVisao(campo, boneco, id) {
+    const alca = document.createElement("div");
+    alca.classList.add("alca-visao");
+    alca.title = "Arraste para girar";
+    campo.appendChild(alca);
+
+    let girando = false;
+    let ultimoAviso = 0;
+
+    alca.addEventListener("pointerdown", function(event) {
+        // Não deixa o token (nem o mapa) ser arrastado junto
+        event.stopPropagation();
+
+        if (event.button !== 0) {
+            return;
+        }
+
+        event.preventDefault();
+        girando = true;
+
+        // Enquanto giramos, o giro vindo de outra tela não mexe neste cone
+        boneco.dataset.girando = "sim";
+    });
+
+    // O clique na alça não abre o painel de vida do token
+    alca.addEventListener("click", function(event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener("pointermove", function(event) {
+        if (!girando) {
+            return;
+        }
+
+        // Centro do token na tela. Math.atan2 dá o ângulo da linha
+        // "centro → mouse" (em radianos; × 180 / π vira graus).
+        const caixa = boneco.getBoundingClientRect();
+        const centroX = caixa.left + caixa.width / 2;
+        const centroY = caixa.top + caixa.height / 2;
+
+        const angulo = Math.round(
+            Math.atan2(event.clientY - centroY, event.clientX - centroX) * 180 / Math.PI
+        );
+
+        definirCampoVisao(boneco, angulo);
+
+        // Os jogadores veem o cone girando, no máximo 20 vezes por segundo
+        const agora = Date.now();
+
+        if (agora - ultimoAviso >= INTERVALO_AO_VIVO) {
+            ultimoAviso = agora;
+            Armazenamento.avisarAoVivo("visao", { id: id, angulo: angulo });
+        }
+    });
+
+    document.addEventListener("pointerup", function() {
+        if (!girando) {
+            return;
+        }
+
+        girando = false;
+        delete boneco.dataset.girando;
+
+        // A direção final na hora; o banco confirma logo depois
+        Armazenamento.avisarAoVivo("visao", { id: id, angulo: Number(boneco.dataset.visao) });
+        salvarEstadoBatalha();
+    });
+}
+
 function tornarArrastavel(boneco, id) {
     let arrastandoBoneco = false;
     let mouseXBoneco = 0;

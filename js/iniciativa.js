@@ -46,6 +46,11 @@ function salvarEstadoBatalha() {
             x: parseFloat(boneco.style.left),
             y: parseFloat(boneco.style.top)
         };
+
+        // Campo de visão ligado: guarda para onde ele está olhando
+        if (boneco.dataset.visao !== undefined) {
+            tokens[id].visao = Number(boneco.dataset.visao);
+        }
     }
 
     // De quem é a vez, já calculado, para a visão dos jogadores

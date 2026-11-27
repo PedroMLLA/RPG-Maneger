@@ -1115,6 +1115,63 @@ header h1 .marca,
 }
 
 
+/* ---------- Campo de visão (nas duas telas) ---------- */
+/* Caixa de tamanho zero bem no centro do token: ela gira (rotate) e o
+   cone, desenhado em SVG pelo tokens.js, gira junto em volta do centro. */
+.campo-visao {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+
+    color: #5ec8ff;                /* aliado: azul claro (aparece em mapa claro e escuro) */
+    pointer-events: none;          /* o cone não atrapalha cliques no mapa */
+}
+
+.boneco[data-tipo="inimigo"] .campo-visao {
+    color: var(--perigo-forte);    /* inimigo: vermelho */
+}
+
+.campo-visao svg {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+
+    /* Contorno escuro: o cone aparece até em mapa claro */
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
+}
+
+/* Bolinha na ponta do cone (só na tela do mestre): arrastar gira */
+.alca-visao {
+    position: absolute;
+    left: var(--alcance);
+    top: 0;
+    translate: -50% -50%;
+
+    width: 18px;
+    height: 18px;
+
+    background: currentColor;
+    border: 2px solid #0f1115;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;            /* no celular, o dedo gira em vez de rolar */
+}
+
+.alca-visao:active {
+    cursor: grabbing;
+}
+
+/* Jogadores: o cone desliza entre as mensagens do mestre, como o token */
+.visao-jogadores .campo-visao {
+    transition: transform 80ms linear;
+}
+
+
 /* ---------- Condições e inimigo derrotado (nas duas telas) ---------- */
 /* Faixa de ícones embaixo do token */
 .condicoes-token {

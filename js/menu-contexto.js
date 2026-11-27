@@ -4,6 +4,7 @@
 // ----- Menu do botão direito -----
 const menuContexto = document.getElementById("menu-contexto");
 const opcaoVidaVisivel = document.getElementById("opcao-vida-visivel");
+const opcaoVisao = document.getElementById("opcao-visao");
 const condicoesMenu = document.getElementById("condicoes-menu");
 
 // Guarda em qual personagem o menu foi aberto
@@ -26,6 +27,14 @@ function abrirMenuContexto(id, x, y) {
     } else {
         opcaoVidaVisivel.textContent = `👁️ Mostrar ${oQueMostra} aos jogadores`;
     }
+
+    // Campo de visão: o texto diz o que o clique vai fazer
+    const boneco = personagensCriados[id];
+    const visaoLigada = boneco && boneco.dataset.visao !== undefined;
+
+    opcaoVisao.textContent = visaoLigada
+        ? "🔦 Desligar campo de visão"
+        : "🔦 Ligar campo de visão";
 
     desenharCondicoesDoMenu();
 
@@ -112,6 +121,20 @@ opcaoVidaVisivel.addEventListener("click", function() {
             "vida-visivel",
             personagem.vidaVisivel
         );
+    }
+
+    fecharMenuContexto();
+});
+
+// Liga o cone olhando para a direita (depois é só girar pela alça),
+// ou desliga. Fica salvo na batalha, junto com a posição do token.
+opcaoVisao.addEventListener("click", function() {
+    const boneco = personagensCriados[idDoMenu];
+
+    if (boneco) {
+        const ligado = boneco.dataset.visao !== undefined;
+        aplicarCampoVisao(idDoMenu, ligado ? null : 0);
+        salvarEstadoBatalha();
     }
 
     fecharMenuContexto();

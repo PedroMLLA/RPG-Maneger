@@ -111,6 +111,9 @@ for (const id in estadoSalvo.tokens) {
         personagem.tipo || "player",
         tamanhoEmPixels(personagem.tamanho)
     );
+
+    // Cone ligado? Volta olhando para o mesmo lado
+    aplicarCampoVisao(id, posicao.visao);
 }
 
 // 4) O turno só é restaurado no fim, com todos os tokens já no mapa
