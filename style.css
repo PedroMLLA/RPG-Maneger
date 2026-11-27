@@ -3904,3 +3904,200 @@ button:active:not(:disabled) {
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* ---------- Natal (js/natal.js) ----------
+   Só vale com a classe "natal" no <html>, que o natal.js coloca.
+   Tirando o script das páginas, tudo isto some sozinho. */
+
+/* Pisca-pisca: preso embaixo do cabeçalho. Não pega cliques. */
+.natal .pisca-pisca {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 30;                   /* logo acima do cabeçalho (20) */
+    height: 34px;
+    pointer-events: none;
+}
+
+.natal .pisca-pisca .fio {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: visible;
+}
+
+.natal .pisca-pisca .fio path {
+    fill: none;
+    stroke: #1f3b24;               /* fio verde escuro */
+    stroke-width: 2;
+}
+
+/* Cada lâmpada: uma gotinha pendurada no fio, com um "soquete" escuro */
+.natal .lampada {
+    position: absolute;
+    width: 10px;
+    height: 15px;
+    translate: -50% 0;
+
+    background: var(--cor-lampada);
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    box-shadow: 0 0 10px 2px var(--cor-lampada);
+
+    animation: piscar 1.6s ease-in-out infinite;
+}
+
+.natal .lampada::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 2px;
+    width: 6px;
+    height: 4px;
+    background: #2a2a2a;
+    border-radius: 1px;
+}
+
+/* A outra metade das lâmpadas acende quando a primeira apaga */
+.natal .lampada.par {
+    animation-name: piscar-invertido;
+}
+
+.natal .lampada.vermelha { --cor-lampada: #ff3b40; }
+.natal .lampada.verde    { --cor-lampada: #3ddc6b; }
+.natal .lampada.dourada  { --cor-lampada: #ffc93c; }
+.natal .lampada.azul     { --cor-lampada: #4aa8ff; }
+
+@keyframes piscar {
+    0%, 45%   { opacity: 1;    box-shadow: 0 0 10px 2px var(--cor-lampada); }
+    55%, 100% { opacity: 0.35; box-shadow: none; }
+}
+
+@keyframes piscar-invertido {
+    0%, 45%   { opacity: 0.35; box-shadow: none; }
+    55%, 100% { opacity: 1;    box-shadow: 0 0 10px 2px var(--cor-lampada); }
+}
+
+/* Neve: poucos flocos, bem clarinhos, atrás das janelas e menus */
+.natal .neve {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.natal .floco {
+    position: absolute;
+    top: -20px;
+
+    font-size: var(--tamanho);
+    color: #ffffff;
+    opacity: 0.55;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+
+    animation: cair var(--duracao) linear infinite;
+}
+
+/* translate: desce a tela toda balançando de lado */
+@keyframes cair {
+    0%   { transform: translate(0, 0); }
+    50%  { transform: translate(var(--balanco), 55vh); }
+    100% { transform: translate(0, calc(100vh + 40px)); }
+}
+
+/* Gorro de Papai Noel no "RPG" do título.
+   ::before = o gorro (triângulo vermelho com a barra branca embaixo)
+   ::after  = o pompom branco na ponta */
+.natal header h1 .marca,
+.natal .titulo-inicio .marca {
+    position: relative;
+}
+
+/* No título grande o "RPG" ocupa a linha inteira (display: block).
+   fit-content deixa a caixa só do tamanho das letras, para o gorro
+   ficar em cima do "R" e não lá no canto da linha. */
+.natal .titulo-inicio .marca {
+    width: fit-content;
+    margin-inline: auto;           /* continua centralizado */
+}
+
+/* Ali a letra é enorme: gorro menor e mais para a esquerda, para não
+   cobrir o adesivo "Mesa de batalha". O ".inicio" a mais faz esta
+   regra ganhar da regra geral do gorro, que vem depois no arquivo. */
+.natal .inicio .titulo-inicio .marca::before {
+    top: -0.22em;
+    left: -0.24em;
+    width: 0.62em;
+    height: 0.42em;
+}
+
+.natal .inicio .titulo-inicio .marca::after {
+    top: -0.3em;
+    left: 0.24em;
+    width: 0.14em;
+    height: 0.14em;
+}
+
+.natal header h1 .marca::before,
+.natal .titulo-inicio .marca::before {
+    content: "";
+    position: absolute;
+    top: -0.38em;
+    left: -0.26em;
+    width: 0.95em;
+    height: 0.62em;
+
+    /* Duas camadas: a barra branca (embaixo) por cima do pano vermelho.
+       O clip-path recorta tudo num triângulo torto. */
+    background:
+        linear-gradient(to top, #f5f1ea 0 26%, transparent 26%),
+        linear-gradient(160deg, #ff3b40, #a3121f);
+    clip-path: polygon(0 100%, 100% 100%, 80% 0);
+    rotate: -18deg;
+}
+
+.natal header h1 .marca::after,
+.natal .titulo-inicio .marca::after {
+    content: "";
+    position: absolute;
+    top: -0.5em;
+    left: 0.42em;
+    width: 0.2em;
+    height: 0.2em;
+
+    background: #f5f1ea;
+    border-radius: 50%;
+}
+
+/* Visão dos jogadores (PC): desce um pouco os painéis e o "Vez de",
+   para o pisca-pisca do topo não ficar por cima deles */
+@media (min-width: 761px) {
+    .natal #grupo-jogadores,
+    .natal #inventarios-jogadores {
+        top: 44px;
+    }
+
+    .natal #vez-jogadores {
+        top: 40px;
+    }
+}
+
+/* No celular os painéis ficam embaixo; só o "Vez de" desce */
+@media (max-width: 760px) {
+    .natal #vez-jogadores {
+        top: 36px;
+    }
+}
+
+/* Quem pediu menos movimento no sistema: lâmpadas acesas paradas, sem neve */
+@media (prefers-reduced-motion: reduce) {
+    .natal .lampada {
+        animation: none;
+        opacity: 1;
+    }
+
+    .natal .neve {
+        display: none;
+    }
+}
