@@ -133,6 +133,11 @@ function limitarEscala(valor) {
 function atualizarMapa() {
     conteudoMapa.style.transform =
         `translate(${posicaoX}px, ${posicaoY}px) scale(${escala})`;
+
+    // Para o CSS: a alça do campo de visão fica do mesmo tamanho na tela
+    if (escala > 0) {
+        conteudoMapa.style.setProperty("--escala-mapa", escala);
+    }
 }
 
 // A imagem agora fica no tamanho original (pode ter 2000px), então

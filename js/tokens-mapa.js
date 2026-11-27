@@ -266,18 +266,36 @@ function aplicarCampoVisao(id, angulo) {
     }
 }
 
-// A bolinha na ponta do cone: arrastar em volta do token faz ele olhar
-// para onde o mouse (ou o dedo) está.
+// A bolinha na ponta do cone e o próprio cone: arrastar qualquer um dos
+// dois em volta do token faz ele girar.
 function criarAlcaVisao(campo, boneco, id) {
     const alca = document.createElement("div");
     alca.classList.add("alca-visao");
     alca.title = "Arraste para girar";
     campo.appendChild(alca);
 
+    // "giravel": o CSS deixa o cone receber o mouse (só na tela do mestre)
+    campo.classList.add("giravel");
+
     let girando = false;
     let ultimoAviso = 0;
 
-    alca.addEventListener("pointerdown", function(event) {
+    // Diferença entre para onde o cone olha e onde o mouse pegou.
+    // Assim, pegar na beirada do cone não faz ele dar um pulo.
+    let diferenca = 0;
+
+    // Ângulo (em graus) da linha "centro do token → mouse".
+    // Math.atan2 devolve em radianos; × 180 / π vira graus.
+    function anguloDoMouse(event) {
+        const caixa = boneco.getBoundingClientRect();
+        const centroX = caixa.left + caixa.width / 2;
+        const centroY = caixa.top + caixa.height / 2;
+
+        return Math.atan2(event.clientY - centroY, event.clientX - centroX) * 180 / Math.PI;
+    }
+
+    // O evento sobe do cone (ou da bolinha) até a caixa: um ouvinte só
+    campo.addEventListener("pointerdown", function(event) {
         // Não deixa o token (nem o mapa) ser arrastado junto
         event.stopPropagation();
 
@@ -287,13 +305,14 @@ function criarAlcaVisao(campo, boneco, id) {
 
         event.preventDefault();
         girando = true;
+        diferenca = Number(boneco.dataset.visao) - anguloDoMouse(event);
 
         // Enquanto giramos, o giro vindo de outra tela não mexe neste cone
         boneco.dataset.girando = "sim";
     });
 
-    // O clique na alça não abre o painel de vida do token
-    alca.addEventListener("click", function(event) {
+    // Clicar no cone não abre o painel de vida do token
+    campo.addEventListener("click", function(event) {
         event.stopPropagation();
     });
 
@@ -302,15 +321,11 @@ function criarAlcaVisao(campo, boneco, id) {
             return;
         }
 
-        // Centro do token na tela. Math.atan2 dá o ângulo da linha
-        // "centro → mouse" (em radianos; × 180 / π vira graus).
-        const caixa = boneco.getBoundingClientRect();
-        const centroX = caixa.left + caixa.width / 2;
-        const centroY = caixa.top + caixa.height / 2;
+        let angulo = Math.round(anguloDoMouse(event) + diferenca);
 
-        const angulo = Math.round(
-            Math.atan2(event.clientY - centroY, event.clientX - centroX) * 180 / Math.PI
-        );
+        // Mantém entre -180 e 180 (girar várias voltas não faz o número crescer)
+        if (angulo > 180) angulo -= 360;
+        if (angulo < -180) angulo += 360;
 
         definirCampoVisao(boneco, angulo);
 
@@ -323,7 +338,7 @@ function criarAlcaVisao(campo, boneco, id) {
         }
     });
 
-    document.addEventListener("pointerup", function() {
+    function pararDeGirar() {
         if (!girando) {
             return;
         }
@@ -334,7 +349,10 @@ function criarAlcaVisao(campo, boneco, id) {
         // A direção final na hora; o banco confirma logo depois
         Armazenamento.avisarAoVivo("visao", { id: id, angulo: Number(boneco.dataset.visao) });
         salvarEstadoBatalha();
-    });
+    }
+
+    document.addEventListener("pointerup", pararDeGirar);
+    document.addEventListener("pointercancel", pararDeGirar);
 }
 
 function tornarArrastavel(boneco, id) {

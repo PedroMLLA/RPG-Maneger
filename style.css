@@ -1142,18 +1142,27 @@ header h1 .marca,
     filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
 }
 
-/* Bolinha na ponta do cone (só na tela do mestre): arrastar gira */
+/* Mestre: o próprio cone também pode ser arrastado para girar */
+.campo-visao.giravel path {
+    pointer-events: visiblePainted;
+    cursor: grab;
+}
+
+/* Bolinha na ponta do cone (só na tela do mestre): arrastar gira.
+   O mapa inteiro encolhe com o zoom (--escala-mapa, do mapa.js);
+   dividir por ela deixa a bolinha sempre do mesmo tamanho NA TELA,
+   senão num mapa grande ela vira um pontinho impossível de pegar. */
 .alca-visao {
     position: absolute;
     left: var(--alcance);
     top: 0;
     translate: -50% -50%;
 
-    width: 18px;
-    height: 18px;
+    width: calc(22px / var(--escala-mapa, 1));
+    height: calc(22px / var(--escala-mapa, 1));
 
     background: currentColor;
-    border: 2px solid #0f1115;
+    border: calc(2px / var(--escala-mapa, 1)) solid #0f1115;
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 
